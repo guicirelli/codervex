@@ -1,0 +1,26 @@
+import { MetadataRoute } from 'next'
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: 'Custom PE - Transforme projetos web em superprompts de IA',
+    short_name: 'Custom PE',
+    description: 'Transforme qualquer projeto web em um superprompt de IA e recrie sites instantaneamente',
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#ffffff',
+    theme_color: '#9333ea',
+    icons: [
+      {
+        src: '/icon-192.png',
+        sizes: '192x192',
+        type: 'image/png',
+      },
+      {
+        src: '/icon-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+      },
+    ],
+  }
+}
+

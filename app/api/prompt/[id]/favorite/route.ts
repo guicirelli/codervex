@@ -1,0 +1,46 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/core/database'
+import { getTokenFromRequest, verifyToken } from '@/lib/core/auth'
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const token = getTokenFromRequest(request)
+    if (!token) {
+      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+    }
+
+    const payload = verifyToken(token)
+    if (!payload) {
+      return NextResponse.json({ error: 'Token inválido' }, { status: 401 })
+    }
+
+    const { isFavorite } = await request.json()
+
+    const prompt = await prisma.prompt.findUnique({
+      where: { id },
+    })
+
+    if (!prompt || prompt.userId !== payload.userId) {
+      return NextResponse.json({ error: 'Prompt não encontrado' }, { status: 404 })
+    }
+
+    await prisma.prompt.update({
+      where: { id },
+      data: {
+        isFavorite,
+      },
+    })
+
+    return NextResponse.json({ message: 'Favorito atualizado', isFavorite })
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message || 'Erro ao atualizar favorito' },
+      { status: 500 }
+    )
+  }
+}
+

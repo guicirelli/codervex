@@ -1,0 +1,122 @@
+{
+  "topRibbon": {
+    "enabled": true,
+    "message": "🎉 Novo! Agora com suporte a modo escuro e geração de superprompts ainda mais inteligente",
+    "closeable": true
+  },
+  "hero": {
+    "title": "Transforme qualquer projeto web em superprompt de IA",
+    "subtitle": "Upload, gera prompt e recrie projetos instantaneamente. Economize tempo, aumente produtividade e entregue projetos completos com apenas alguns cliques.",
+    "ctaPrimary": "Começar Agora",
+    "ctaSecondary": "Ver Exemplo",
+    "image": "/hero-image.png",
+    "stats": [
+      { "number": "500+", "label": "Projetos Transformados" },
+      { "number": "98%", "label": "Satisfação" },
+      { "number": "10x", "label": "Mais Rápido" }
+    ]
+  },
+  "features": {
+    "title": "Por que escolher Custom PE?",
+    "subtitle": "Funcionalidades que fazem a diferença",
+    "items": [
+      {
+        "icon": "FiZap",
+        "title": "Análise Automática Inteligente",
+        "description": "Nossa IA detecta automaticamente stack tecnológica, componentes e funcionalidades do seu projeto."
+      },
+      {
+        "icon": "FiShield",
+        "title": "Superprompts Detalhados",
+        "description": "Receba prompts completos e estruturados prontos para usar em Cursor, ChatGPT ou Claude."
+      },
+      {
+        "icon": "FiStar",
+        "title": "Economia de Tempo",
+        "description": "Reduza de dias para minutos o tempo necessário para analisar e recriar projetos complexos."
+      },
+      {
+        "icon": "FiUpload",
+        "title": "Upload Flexível",
+        "description": "Envie arquivos individuais, ZIP ou conecte repositórios GitHub diretamente."
+      },
+      {
+        "icon": "FiHistory",
+        "title": "Histórico Completo",
+        "description": "Acesse todos os prompts gerados anteriormente e reutilize quando precisar."
+      },
+      {
+        "icon": "FiCreditCard",
+        "title": "Planos Flexíveis",
+        "description": "Escolha pagamento por projeto ou assinatura mensal com prompts ilimitados."
+      }
+    ]
+  },
+  "pricing": {
+    "title": "Planos e Preços",
+    "subtitle": "Escolha o plano ideal para suas necessidades",
+    "plans": [
+      {
+        "name": "Por Projeto",
+        "price": "R$ 9,90",
+        "period": "/projeto",
+        "features": [
+          "1 superprompt gerado",
+          "Análise completa do projeto",
+          "Detecção de stack tecnológica",
+          "Mapeamento de componentes",
+          "Histórico de prompts",
+          "Suporte por email"
+        ],
+        "cta": "Começar Agora",
+        "featured": false
+      },
+      {
+        "name": "Assinatura Mensal",
+        "price": "R$ 49,90",
+        "period": "/mês",
+        "features": [
+          "Prompts ilimitados",
+          "Análise completa do projeto",
+          "Detecção de stack tecnológica",
+          "Mapeamento de componentes",
+          "Histórico completo",
+          "Suporte prioritário",
+          "API access (em breve)"
+        ],
+        "cta": "Assinar Agora",
+        "featured": true
+      }
+    ]
+  },
+  "testimonials": {
+    "title": "O que dizem nossos usuários",
+    "items": [
+      {
+        "name": "Lucas Silva",
+        "role": "Freelancer React/Next.js",
+        "rating": 5,
+        "text": "Economizei horas de trabalho analisando projetos. O Custom PE transformou minha produtividade completamente!"
+      },
+      {
+        "name": "Maria Santos",
+        "role": "CTO, TechStart",
+        "rating": 5,
+        "text": "A melhor ferramenta para recriar projetos rapidamente. Os superprompts são incrivelmente detalhados e precisos."
+      },
+      {
+        "name": "João Oliveira",
+        "role": "Desenvolvedor Full Stack",
+        "rating": 5,
+        "text": "Simplesmente revolucionário. De dias para minutos na análise de projetos complexos. Recomendo 100%!"
+      }
+    ]
+  },
+  "cta": {
+    "title": "Pronto para transformar seus projetos?",
+    "subtitle": "Junte-se a centenas de desenvolvedores que já estão economizando tempo com Custom PE",
+    "button": "Criar Conta Gratuita",
+    "secondaryText": "Sem cartão. Cancele quando quiser."
+  }
+}
+
