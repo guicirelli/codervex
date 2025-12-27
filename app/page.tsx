@@ -1,12 +1,8 @@
 'use client'
 
-import React, { memo, useMemo } from 'react'
+import React, { useMemo } from 'react'
 
-export const dynamic = 'force-dynamic'
 import Link from 'next/link'
-import Image from 'next/image'
-import dynamicImport from 'next/dynamic'
-import { useUser } from '@clerk/nextjs'
 import {
   ArrowRight,
   Upload,
@@ -25,18 +21,14 @@ import {
   TrendingUp,
 } from 'lucide-react'
 
-// Lazy load componentes pesados
-const Navbar = dynamicImport(() => import('@/components/shared/layout/Navbar'), {
-  ssr: true,
-  loading: () => <div className="h-16 bg-black" />,
-})
-
-const Footer = dynamicImport(() => import('@/components/shared/layout/Footer'), {
-  ssr: true,
-})
+// Importar Navbar diretamente para aparecer imediatamente
+import Navbar from '@/components/shared/layout/Navbar'
+// Footer é simples, não precisa de lazy loading
+import Footer from '@/components/shared/layout/Footer'
 
 function HomePage() {
-  const { user, isLoaded } = useUser()
+  // Não usar useUser aqui para evitar quebrar a página
+  // Se precisar de autenticação, usar em componentes específicos
   
   // Memoizar dados estáticos
   const problemItems = useMemo(() => [
@@ -85,49 +77,49 @@ function HomePage() {
   ], [])
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col bg-black">
       <Navbar />
 
       {/* SECTION 1 — HERO */}
-      <section className="relative min-h-screen w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section 
+        className="relative min-h-screen w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden"
+        style={{
+          backgroundImage: 'url(/images/background-home.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundColor: '#000',
+        }}
+        suppressHydrationWarning
+      >
         <div className="absolute inset-0 w-full h-full">
-          <Image
-            src="/images/background-home.png"
-            alt="Purple and Blue Modern Company Meeting Zoom Virtual Background"
-            fill
-            className="object-cover w-full h-full"
-            priority
-            quality={85}
-            sizes="100vw"
-            placeholder="blur"
-            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70 dark:from-black/80 dark:via-black/70 dark:to-black/90"></div>
-          <div className="absolute inset-0 bg-primary-500/20"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50"></div>
+          <div className="absolute inset-0 bg-primary-500/10"></div>
         </div>
 
-        <div className="relative max-w-6xl mx-auto text-center space-y-6 z-10 w-full py-20">
+        <div className="relative max-w-6xl mx-auto text-center space-y-6 z-10 w-full pt-8 pb-8">
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight drop-shadow-lg">
             If the code doesn&apos;t speak, Codervex makes it speak.
-          </h1>
+            </h1>
 
           <p className="text-lg sm:text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto font-medium leading-relaxed drop-shadow-md">
             Transform real web projects into clear, reusable instructions for AI.
-          </p>
+            </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
             <a
-              href="#how-it-works"
+                href="#how-it-works"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-500 text-white rounded-xl font-bold text-lg hover:bg-primary-500 transition-all shadow-2xl hover:shadow-[0_0_30px_rgba(146,141,246,0.5)] transform hover:scale-105 border-2 border-primary-400/50"
             >
               See Demo
+              <Rocket className="w-5 h-5" />
             </a>
             <Link
-              href="/auth/register"
+              href="/dashboard"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/95 backdrop-blur-sm border-2 border-white/80 text-gray-900 rounded-xl font-bold text-lg hover:bg-white transition-all shadow-2xl hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transform hover:scale-105"
             >
-              <Play className="w-5 h-5" />
               Get Started
+              <Play className="w-5 h-5" />
             </Link>
           </div>
         </div>
@@ -167,94 +159,93 @@ function HomePage() {
 
       {/* SECTION 3 — RESULT (VISUAL TEMPLATES) */}
       <section className="relative w-full py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-800">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white leading-tight mb-4">
               What You Get
             </h2>
             <p className="text-lg text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
-              See both templates side by side — Base Prompt and Custom Prompt
+              Base Prompt comes from your files. Custom Prompt adapts to your changes.
             </p>
-          </div>
-
+              </div>
+              
           {/* Templates lado a lado */}
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="grid md:grid-cols-2 gap-8 mb-8">
             {/* Base Prompt */}
-            <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-lg">
-              <div className="flex items-center justify-between mb-4">
+            <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-lg flex flex-col h-full">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-primary-500 flex items-center justify-center flex-shrink-0">
                     <FileText className="w-5 h-5 text-white" />
                   </div>
-                  <div>
+                <div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white">Base Prompt</h3>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Without customization</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Auto-generated from files</p>
                   </div>
                 </div>
                 <div className="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg text-xs font-semibold text-gray-600 dark:text-gray-400">
                   Example
                 </div>
               </div>
-              <div className="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 text-xs font-mono text-gray-100 dark:text-gray-200 whitespace-pre-wrap leading-relaxed border border-gray-700 min-h-[350px]">
-{`Create a Next.js project using TypeScript.
+              <div className="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 text-xs font-mono text-gray-100 dark:text-gray-200 whitespace-pre-wrap leading-relaxed border border-gray-700 flex-1 flex items-start">
+{`Project context:
 
-Structure:
-- Landing Page
-- Dashboard
-- Auth
+Type: Web application
 
 Stack:
 - Next.js (App Router)
 - TypeScript
 - Tailwind CSS
 
-Features:
-- User authentication
-- Dashboard with charts
-- Responsive design
-- Dark mode support`}
-              </div>
-            </div>
+Structure:
+- Landing page
+- Dashboard
+- Authentication
 
+Main features:
+- User authentication
+- Dashboard layout
+- CRUD forms
+- Responsive design`}
+                </div>
+              </div>
+              
             {/* Custom Prompt */}
-            <div className="bg-white dark:bg-gray-800 border-2 border-primary-500/30 dark:border-primary-500/30 rounded-xl p-6 shadow-lg">
-              <div className="flex items-center justify-between mb-4">
+            <div className="bg-white dark:bg-gray-800 border-2 border-primary-500/30 dark:border-primary-500/30 rounded-xl p-5 shadow-lg flex flex-col h-full">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-primary-500 flex items-center justify-center flex-shrink-0">
                     <CheckCircle className="w-5 h-5 text-white" />
                   </div>
-                  <div>
+                <div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white">Custom Prompt</h3>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">With customization</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Your requested changes</p>
                   </div>
                 </div>
                 <div className="px-3 py-1 bg-primary-500/20 dark:bg-primary-500/20 rounded-lg text-xs font-semibold text-primary-500 dark:text-primary-500">
                   Example
                 </div>
               </div>
-              <div className="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 text-xs font-mono text-gray-100 dark:text-gray-200 whitespace-pre-wrap leading-relaxed border border-gray-700 min-h-[350px]">
-{`Adapt the project for a financial SaaS.
+              <div className="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 text-xs font-mono text-gray-100 dark:text-gray-200 whitespace-pre-wrap leading-relaxed border border-gray-700 flex-1 flex items-start">
+{`Project adaptation goal:
+Transform the existing project into a financial SaaS interface.
 
-Changes:
-- Remove auth system
-- Implement new corporate layout
-- Use Tailwind CSS and App Router
-- Add financial dashboard widgets
+Changes to apply:
+- Remove authentication flows and related UI
+- Replace the current layout with a clean, corporate design
+- Add dashboard sections focused on financial data visualization
 
-Keep:
-- Dashboard structure
-- Form system
-- CRUD functionality
-- Responsive design
+Keep unchanged:
+- Overall dashboard structure
+- Form handling patterns
+- CRUD-based interfaces
+- Responsive layout behavior
 
-New Requirements:
-- Financial charts integration
-- Transaction history
-- Account management
-- Payment processing UI`}
+Scope:
+Frontend only. No backend logic or real payment integrations.`}
+                </div>
               </div>
             </div>
-          </div>
 
           {/* CTA para Dashboard */}
           <div className="text-center">
@@ -262,7 +253,6 @@ New Requirements:
               href="/dashboard"
               className="inline-flex items-center gap-2 px-8 py-4 bg-primary-500 text-white rounded-xl font-semibold text-lg hover:bg-primary-500 transition-all shadow-xl hover:shadow-2xl"
             >
-              <Rocket className="w-5 h-5" />
               Try It Now in Dashboard
               <ArrowRight className="w-5 h-5" />
             </Link>
@@ -330,20 +320,20 @@ New Requirements:
             <p className="text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
               Three simple steps to transform your project into AI-ready instructions
             </p>
-          </div>
-
+                  </div>
+                  
           <div className="relative">
             {/* Linha conectora (desktop) */}
             <div className="hidden md:block absolute top-24 left-0 right-0 h-0.5 bg-primary-500/30"></div>
 
             <div className="grid md:grid-cols-3 gap-8 lg:gap-12 relative">
               {howItWorksSteps.map((item, i) => (
-                <div key={i} className="relative group">
+                <div key={i} className="relative group flex flex-col">
                   {/* Número do passo */}
                   <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-2xl z-20 border-4 border-white dark:border-gray-800">
                     {item.step}
                   </div>
-
+                  
                   {/* Seta conectora (desktop) */}
                   {i < 2 && (
                     <div className="hidden md:block absolute top-12 -right-6 lg:-right-12 w-12 lg:w-24 h-0.5 bg-primary-500/30 z-10">
@@ -352,7 +342,7 @@ New Requirements:
                   )}
 
                   {/* Card principal */}
-                  <div className="relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-8 pt-16 text-center hover:border-primary-500 dark:hover:border-primary-500 transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-2 group-hover:scale-105">
+                  <div className="relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-8 pt-16 text-center hover:border-primary-500 dark:hover:border-primary-500 transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-2 group-hover:scale-105 flex flex-col h-full">
                     {/* Ícone */}
                     <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-primary-500 flex items-center justify-center text-white shadow-xl group-hover:scale-110 transition-transform">
                       {item.icon}
@@ -369,7 +359,7 @@ New Requirements:
                     </p>
 
                     {/* Detalhes */}
-                    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-5 text-left border border-gray-200 dark:border-gray-700">
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-5 text-left border border-gray-200 dark:border-gray-700 flex-1 flex flex-col justify-start">
                       <ul className="space-y-3">
                         {item.details.map((detail, idx) => (
                           <li key={idx} className="flex items-start gap-3">
@@ -388,11 +378,10 @@ New Requirements:
           {/* CTA Final */}
           <div className="text-center mt-16">
             <Link
-              href="/auth/register"
+              href="/dashboard"
               className="inline-flex items-center gap-3 px-10 py-5 bg-primary-500 text-white rounded-xl font-bold text-lg hover:bg-primary-500 transition-all shadow-2xl hover:shadow-[0_0_30px_rgba(146,141,246,0.5)] transform hover:scale-105"
             >
-              <Play className="w-6 h-6" />
-              Try It Now
+              Access Dashboard
               <ArrowRight className="w-6 h-6" />
             </Link>
           </div>
@@ -419,7 +408,7 @@ New Requirements:
                   Customization Options
                 </h3>
                 <ul className="space-y-3">
-                  {[
+                {[
                     'Define your objective',
                     'Specify what should change',
                     'Choose preferred technologies',
@@ -429,7 +418,7 @@ New Requirements:
                       <CheckCircle className="w-5 h-5 text-primary-500 mt-0.5 flex-shrink-0" />
                       <span className="text-base text-gray-700 dark:text-gray-300">{item}</span>
                     </li>
-                  ))}
+                ))}
                 </ul>
               </div>
               <div>
@@ -439,6 +428,9 @@ New Requirements:
                 </h3>
                 <p className="text-base text-gray-700 dark:text-gray-300 leading-relaxed">
                   Receive a tailored prompt that perfectly aligns your project&apos;s structure with your specific objectives, ready to use with any AI tool.
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 leading-relaxed">
+                  The prompt acts as a technical context block — direct, scannable, and ready to copy. No fluff, just the information your AI needs to understand and work with your codebase.
                 </p>
               </div>
             </div>
@@ -458,7 +450,7 @@ New Requirements:
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 gap-6">
             {/* Exemplo 1 */}
             <div className="bg-white dark:bg-gray-800 border-2 border-primary-500/30 dark:border-primary-500/30 rounded-xl p-6 shadow-lg">
               <div className="flex items-start gap-4">
@@ -467,7 +459,7 @@ New Requirements:
                 </div>
                 <div className="flex-1">
                   <p className="text-base font-semibold text-gray-900 dark:text-white leading-relaxed">
-                    Analyzed a Next.js SaaS with 40+ files and generated a reusable prompt in seconds.
+                    Analyzed a Next.js SaaS with 40+ files, generated a full project summary, detected the tech stack, and produced a reusable base prompt with optional customization.
                   </p>
                 </div>
               </div>
@@ -481,21 +473,7 @@ New Requirements:
                 </div>
                 <div className="flex-1">
                   <p className="text-base font-semibold text-gray-900 dark:text-white leading-relaxed">
-                    Processed a React e-commerce platform with 60+ components and extracted complete architecture in minutes.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Exemplo 3 */}
-            <div className="bg-white dark:bg-gray-800 border-2 border-primary-500/30 dark:border-primary-500/30 rounded-xl p-6 shadow-lg">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-primary-500 flex items-center justify-center flex-shrink-0">
-                  <TrendingUp className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-base font-semibold text-gray-900 dark:text-white leading-relaxed">
-                    Transformed a Vue.js admin dashboard with TypeScript into a clear, structured AI prompt ready to use.
+                    Processed a React e-commerce platform with 60+ components, mapped the complete architecture, identified core features, and transformed the codebase into clear AI-ready instructions.
                   </p>
                 </div>
               </div>
@@ -504,29 +482,7 @@ New Requirements:
         </div>
       </section>
 
-      {/* SECTION 8 — DASHBOARD (Logged in users only) */}
-      {isLoaded && user && (
-        <section className="relative w-full py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
-          <div className="max-w-6xl mx-auto text-center">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white leading-tight mb-4">
-              Your Dashboard
-            </h2>
-            <p className="text-lg text-gray-700 dark:text-gray-300 max-w-2xl mx-auto mb-8">
-              Manage your projects and superprompts
-            </p>
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-primary-500 text-white rounded-xl font-semibold text-lg hover:bg-primary-500 transition-all shadow-xl hover:shadow-2xl"
-            >
-              <Rocket className="w-5 h-5" />
-              Access Dashboard
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-          </div>
-        </section>
-      )}
-
-      {/* SECTION 9 — PRICING */}
+      {/* SECTION 8 — PRICING */}
       <section id="pricing" className="relative w-full py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
@@ -571,4 +527,4 @@ New Requirements:
   )
 }
 
-export default memo(HomePage)
+export default HomePage

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Save, Copy, Sparkles, Wand2, FileText, CheckCircle, Loader2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/common'
 import toast from 'react-hot-toast'
 
 interface PromptEditorProps {

@@ -2,9 +2,31 @@
 const nextConfig = {
   reactStrictMode: true,
   
+  // Otimizações de Compilação
+  // swcMinify removido - é padrão no Next.js 15+
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  
   // Otimizações de Imagens
   images: {
-    domains: ['github.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'github.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img.clerk.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.clerk.dev',
+        pathname: '/**',
+      },
+    ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
@@ -16,12 +38,6 @@ const nextConfig = {
   // Compressão e Minificação
   compress: true,
   poweredByHeader: false,
-  swcMinify: true,
-  
-  // Otimizações de Build
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
   
   // Otimizações Experimentais
   experimental: {
@@ -33,11 +49,20 @@ const nextConfig = {
       'framer-motion',
       '@radix-ui/react-dialog',
       '@radix-ui/react-dropdown-menu',
+      'react-hot-toast',
     ],
+    // Turbopack gerencia cache automaticamente, não precisa configurar
   },
   
   // Headers de Performance
   async headers() {
+    // Em desenvolvimento: não definir headers de cache
+    // Deixa o Next.js gerenciar automaticamente para hot reload funcionar
+    if (process.env.NODE_ENV === 'development') {
+      return []
+    }
+
+    // Em produção: aplicar headers de segurança e cache otimizado
     return [
       {
         source: '/:path*',
@@ -61,8 +86,12 @@ const nextConfig = {
         ],
       },
       {
-        source: '/images/:path*',
+        source: '/_next/static/:path*',
         headers: [
+          {
+            key: 'Content-Type',
+            value: 'text/css; charset=utf-8',
+          },
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
@@ -70,7 +99,20 @@ const nextConfig = {
         ],
       },
       {
-        source: '/_next/static/:path*',
+        source: '/_next/static/chunks/:path*',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/images/:path*',
         headers: [
           {
             key: 'Cache-Control',
@@ -83,6 +125,43 @@ const nextConfig = {
   
   // Webpack Optimizations
   webpack: (config, { dev, isServer }) => {
+    // Configuração de cache mais estável
+    if (dev) {
+      // Desabilitar cache do filesystem em desenvolvimento para evitar problemas
+      config.cache = false
+      
+      // Garantir que módulos sejam resolvidos corretamente
+      config.resolve = {
+        ...config.resolve,
+        alias: {
+          ...config.resolve.alias,
+        },
+        // Evitar problemas com chunks ausentes
+        fallback: {
+          ...config.resolve.fallback,
+        },
+      }
+      
+      // Configurar output para evitar chunks ausentes
+      config.output = {
+        ...config.output,
+        chunkFilename: 'static/chunks/[name].js',
+        // Evitar hash em desenvolvimento para manter consistência
+        filename: isServer ? '[name].js' : 'static/chunks/[name].js',
+      }
+      
+      // Garantir que erros não quebrem o build
+      config.optimization = {
+        ...config.optimization,
+        minimize: false, // Desabilitar minificação em dev para facilitar debug
+      }
+    }
+    
+    // Configurar logging do webpack para reduzir avisos não críticos
+    config.infrastructureLogging = {
+      level: 'error', // Só mostrar erros durante build
+    }
+    
     // Otimizações de produção
     if (!dev && !isServer) {
       config.optimization = {

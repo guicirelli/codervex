@@ -1,7 +1,7 @@
 'use client'
 
-import { memo, useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { useMemo } from 'react'
+// framer-motion removido para compatibilidade com React 19
 import { Star } from 'lucide-react'
 import { cn } from '@/lib/utils/common'
 
@@ -30,12 +30,8 @@ function TestimonialCard({
   }, [name])
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-50px' }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
-      className={cn('card bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 shadow-md gpu-accelerated', className)}
+    <div
+      className={cn('card bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 shadow-md gpu-accelerated animate-fade-in-up', className)}
     >
       <div className="flex items-center mb-4">
         <div className="w-12 h-12 bg-primary-500 dark:bg-primary-500 rounded-full flex items-center justify-center text-white font-semibold mr-4">
@@ -67,9 +63,9 @@ function TestimonialCard({
         </span>
         {text}
       </p>
-    </motion.div>
+    </div>
   )
 }
 
-export default memo(TestimonialCard)
+export default TestimonialCard
 

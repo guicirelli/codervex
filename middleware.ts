@@ -13,7 +13,7 @@ export default clerkMiddleware(async (auth, req) => {
   // Mas ações específicas serão protegidas no componente
   if (isProtectedRoute(req)) {
     await auth.protect()
-  }
+    }
 })
 
 export const config = {

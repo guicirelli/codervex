@@ -1,9 +1,8 @@
 'use client'
 
-import { memo } from 'react'
 import Image from 'next/image'
 
-function Footer() {
+export default function Footer() {
   return (
     <footer className="bg-gray-900 dark:bg-black text-gray-300 dark:text-gray-400">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -53,6 +52,4 @@ function Footer() {
     </footer>
   )
 }
-
-export default memo(Footer)
 

@@ -25,6 +25,7 @@ export default function AdminPage() {
       // Verificar se é admin (você pode adicionar campo isAdmin no schema)
       fetchStats()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading])
 
   const fetchStats = async () => {

@@ -7,10 +7,7 @@ import Link from 'next/link'
 import Navbar from '@/components/shared/layout/Navbar'
 import Footer from '@/components/shared/layout/Footer'
 import LoginModal from '@/components/shared/ui/LoginModal'
-import { usePlanRestrictions } from '@/hooks/usePlanRestrictions'
-import { Plus, FileText, Loader2, Calendar, ArrowRight, Hand, Lock, Sparkles, AlertCircle, Crown } from 'lucide-react'
-
-export const dynamic = 'force-dynamic'
+import { Plus, FileText, Loader2, Calendar, ArrowRight, Hand, Lock, Sparkles } from 'lucide-react'
 
 interface Project {
   id: string
@@ -21,7 +18,6 @@ interface Project {
 export default function DashboardPage() {
   const { user, isLoaded } = useUser()
   const router = useRouter()
-  const { plan, restrictions, isPlanActive } = usePlanRestrictions()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [showLoginModal, setShowLoginModal] = useState(false)
@@ -31,7 +27,7 @@ export default function DashboardPage() {
       fetchProjects()
     } else {
       setLoading(false)
-    }
+      }
   }, [user, isLoaded])
 
   const fetchProjects = async () => {
@@ -54,17 +50,8 @@ export default function DashboardPage() {
       return
     }
     
-    // Verificar restrições do plano
-    if (restrictions.maxProjects !== null && projects.length >= restrictions.maxProjects) {
-      // Mostrar modal de upgrade
-      return
-    }
-    
     action()
   }
-
-  const canCreateProject = restrictions.canCreateProject && 
-    (restrictions.maxProjects === null || projects.length < restrictions.maxProjects)
 
   if (!isLoaded || loading) {
     return (
@@ -86,7 +73,7 @@ export default function DashboardPage() {
         title="Login Required"
         message="Please log in to create and manage your projects"
       />
-
+      
       <div className="flex-1 py-8 px-4 sm:px-6 md:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -103,7 +90,7 @@ export default function DashboardPage() {
                   Dashboard
                 </>
               )}
-            </h1>
+              </h1>
             <p className="text-lg text-gray-600 dark:text-gray-400">
               {user 
                 ? 'Manage your projects and superprompts'
@@ -112,69 +99,21 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          {/* Info do Plano */}
-          {user && (
-            <div className="mb-6 p-4 bg-primary-500/10 dark:bg-primary-500/20 border border-primary-500/30 dark:border-primary-500/30 rounded-lg flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Crown className="w-5 h-5 text-primary-500" />
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                  Plan: {plan === 'free' ? 'Free' : plan === 'monthly' ? 'Monthly' : 'Per Project'}
-                </span>
-                {restrictions.maxProjects !== null && (
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
-                    ({projects.length}/{restrictions.maxProjects} projects)
-                  </span>
-                )}
-              </div>
-              {plan === 'free' && (
-                <a
-                  href="/#pricing"
-                  className="text-xs text-primary-500 hover:text-primary-500 font-semibold"
-                >
-                  Upgrade
-                </a>
-              )}
-            </div>
-          )}
-
           {/* Botão Novo Projeto */}
-          {canCreateProject ? (
-            <div
-              onClick={() => handleAction(() => router.push('/dashboard/create'))}
-              className="inline-flex items-center gap-3 px-8 py-4 bg-primary-500 text-white rounded-lg font-semibold text-lg hover:bg-primary-500 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 mb-10 cursor-pointer"
-            >
-              <Plus className="w-6 h-6" />
-              {user ? 'New Project' : 'Create Project (Login required)'}
-              {!user && <Lock className="w-5 h-5" />}
-            </div>
-          ) : (
-            <div className="mb-10 p-6 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-800 rounded-lg">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <h3 className="font-bold text-yellow-900 dark:text-yellow-200 mb-2">
-                    Project limit reached
-                  </h3>
-                  <p className="text-sm text-yellow-800 dark:text-yellow-300 mb-4">
-                    You&apos;ve reached the limit of {restrictions.maxProjects} project(s) on the {plan === 'free' ? 'Free' : 'Per Project'} plan.
-                  </p>
-                  <a
-                    href="/#pricing"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg font-semibold text-sm hover:bg-primary-500 transition-colors"
-                  >
-                    <Crown className="w-4 h-4" />
-                    Upgrade
-                  </a>
-                </div>
-              </div>
-            </div>
-          )}
+          <div
+            onClick={() => handleAction(() => router.push('/dashboard/create'))}
+            className="inline-flex items-center gap-3 px-8 py-4 bg-primary-500 text-white rounded-lg font-semibold text-lg hover:bg-primary-500 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 mb-10 cursor-pointer"
+          >
+            <Plus className="w-6 h-6" />
+            {user ? 'New Project' : 'Create Project (Login required)'}
+            {!user && <Lock className="w-5 h-5" />}
+          </div>
 
           {/* Lista de Projetos */}
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
               {user ? 'Your Projects' : 'Projects (example)'}
-            </h2>
+                </h2>
 
             {!user ? (
               <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl p-12 text-center border-2 border-dashed border-gray-300 dark:border-gray-700">
@@ -230,19 +169,19 @@ export default function DashboardPage() {
                     <div className="flex items-start justify-between mb-4">
                       <div className="w-12 h-12 bg-primary-500/20 dark:bg-primary-500/20 rounded-lg flex items-center justify-center group-hover:bg-primary-500 dark:group-hover:bg-primary-500 transition-colors">
                         <FileText className="w-6 h-6 text-primary-500 dark:text-primary-500 group-hover:text-white transition-colors" />
-                      </div>
+            </div>
                       <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-primary-500 dark:group-hover:text-primary-500 transition-colors" />
-                    </div>
+          </div>
                     <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2 group-hover:text-primary-500 dark:group-hover:text-primary-500 transition-colors">
                       {project.name || 'Unnamed Project'}
                     </h3>
                     <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                       <Calendar className="w-4 h-4" />
                       <span>Analyzed on {new Date(project.createdAt).toLocaleDateString('en-US')}</span>
-                    </div>
+            </div>
                   </Link>
                 ))}
-              </div>
+            </div>
             )}
           </div>
         </div>

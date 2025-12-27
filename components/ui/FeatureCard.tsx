@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion } from 'framer-motion'
+// framer-motion removido para compatibilidade com React 19
 import { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils/common'
 
@@ -14,14 +14,9 @@ interface FeatureCardProps {
 
 export default function FeatureCard({ icon: Icon, title, description, className }: FeatureCardProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-      whileHover={{ y: -5 }}
+    <div
       className={cn(
-        'card text-center hover:shadow-xl transition-shadow duration-300',
+        'card text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-fade-in-up',
         className
       )}
     >
@@ -32,6 +27,6 @@ export default function FeatureCard({ icon: Icon, title, description, className 
       )}
       <h3 className="text-xl font-semibold mb-2 text-black">{title}</h3>
       <p className="text-gray-700 leading-relaxed">{description}</p>
-    </motion.div>
+    </div>
   )
 }

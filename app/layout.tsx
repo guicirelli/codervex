@@ -1,14 +1,10 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { ClerkProvider } from '@clerk/nextjs'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
-import dynamicImport from 'next/dynamic'
-
-// Lazy load FeedbackWidget for better performance
-const FeedbackWidget = dynamicImport(() => import('@/components/shared/ui/FeedbackWidget'), {
-  ssr: false,
-})
+import FeedbackWidgetWrapper from '@/components/shared/ui/FeedbackWidgetWrapper'
+import ClerkProviderWrapper from '@/components/providers/ClerkProviderWrapper'
+import { ErrorBoundary } from '@/components/providers/ErrorBoundary'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -24,6 +20,11 @@ export const metadata: Metadata = {
   description: 'Transform complex code into clear context. Codervex reconstructs the intent, architecture, and implicit rules of any codebase, allowing you to work with confidence and accelerate development.',
   keywords: ['code analysis', 'software understanding', 'system architecture', 'code comprehension', 'legacy code', 'system documentation', 'reverse engineering', 'AI for code', 'prompt generation', 'development optimization'],
   authors: [{ name: 'Codervex' }],
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
   openGraph: {
     title: 'Codervex - Deep Software Understanding for Developers',
     description: 'Deep software understanding platform. Transform code into reliable context for decision and execution, accelerating your projects and reducing uncertainties.',
@@ -56,28 +57,31 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-
+  // O ClerkProvider lê automaticamente NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY do ambiente
   return (
-    <ClerkProvider
-      publishableKey={clerkKey || ''}
-    >
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        {children}
-        <FeedbackWidget />
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#fff',
-              color: '#000',
-            },
-          }}
-        />
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body className={inter.className} suppressHydrationWarning>
+        <ErrorBoundary>
+          <ClerkProviderWrapper>
+            {children}
+            <FeedbackWidgetWrapper />
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#fff',
+                  color: '#000',
+                },
+              }}
+            />
+          </ClerkProviderWrapper>
+        </ErrorBoundary>
       </body>
     </html>
-    </ClerkProvider>
   )
 }

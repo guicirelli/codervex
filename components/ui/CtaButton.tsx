@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
-import { motion } from 'framer-motion'
+import { cn } from '@/lib/utils/common'
+// framer-motion removido para compatibilidade com React 19
 
 interface CtaButtonProps {
   children: React.ReactNode
@@ -43,13 +43,9 @@ export default function CtaButton({
   )
 
   const buttonContent = (
-    <motion.span
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      className="inline-flex items-center"
-    >
+    <span className="inline-flex items-center transition-transform hover:scale-105 active:scale-95">
       {children}
-    </motion.span>
+    </span>
   )
 
   if (href) {

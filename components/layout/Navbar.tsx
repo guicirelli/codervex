@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+// framer-motion removido temporariamente para compatibilidade com React 19
 import CtaButton from '@/components/shared/ui/CtaButton'
 import { cn } from '@/lib/utils/common'
 
@@ -25,11 +25,9 @@ export default function Navbar() {
   const isActive = (path: string) => pathname === path
 
   return (
-    <motion.nav
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
+    <nav
       className={cn(
-        'sticky top-0 z-50 transition-all duration-300 border-b',
+        'sticky top-0 z-50 transition-all duration-300 border-b animate-slide-down',
         scrolled
           ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-lg border-gray-200 dark:border-gray-800'
           : 'bg-white dark:bg-gray-900 shadow-sm border-gray-200 dark:border-gray-800'
@@ -179,7 +177,7 @@ export default function Navbar() {
           </div>
         </div>
       )}
-    </motion.nav>
+    </nav>
   )
 }
 

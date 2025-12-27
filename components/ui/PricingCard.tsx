@@ -1,8 +1,8 @@
 'use client'
 
-import { motion } from 'framer-motion'
+// framer-motion removido para compatibilidade com React 19
 import { Check } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/common'
 import CtaButton from './CtaButton'
 
 interface PricingCardProps {
@@ -27,13 +27,9 @@ export default function PricingCard({
   className,
 }: PricingCardProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
+    <div
       className={cn(
-        'card relative',
+        'card relative animate-fade-in-up',
         featured && 'border-2 border-primary-500 dark:border-primary-400 shadow-xl',
         className
       )}
@@ -71,7 +67,7 @@ export default function PricingCard({
       >
         {cta}
       </CtaButton>
-    </motion.div>
+    </div>
   )
 }
 

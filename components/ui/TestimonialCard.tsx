@@ -1,8 +1,8 @@
 'use client'
 
-import { motion } from 'framer-motion'
+// framer-motion removido para compatibilidade com React 19
 import { Star } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/common'
 
 interface TestimonialCardProps {
   name: string
@@ -27,12 +27,8 @@ export default function TestimonialCard({
     .slice(0, 2)
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-      className={cn('card', className)}
+    <div
+      className={cn('card animate-fade-in-up', className)}
     >
       <div className="flex items-center mb-4">
         <div className="w-12 h-12 bg-primary-600 dark:bg-primary-500 rounded-full flex items-center justify-center text-white font-semibold mr-4">
@@ -64,7 +60,7 @@ export default function TestimonialCard({
         </span>
         {text}
       </p>
-    </motion.div>
+    </div>
   )
 }
 

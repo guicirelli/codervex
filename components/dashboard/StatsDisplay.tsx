@@ -1,7 +1,7 @@
 'use client'
 
 import { Trophy, Zap, Calendar, TrendingUp } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/common'
 
 interface StatsDisplayProps {
   totalPrompts: number

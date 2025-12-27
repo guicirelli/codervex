@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useCallback } from 'react'
+import { useCallback } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -9,8 +9,6 @@ import dynamicImport from 'next/dynamic'
 import { Upload, Github, Loader2, X, ArrowLeft, FileText, CheckCircle, Wand2 } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
-
-export const dynamic = 'force-dynamic'
 
 // Lazy load componentes
 const Navbar = dynamicImport(() => import('@/components/shared/layout/Navbar'), { ssr: true })
@@ -75,7 +73,7 @@ function CreateProjectPage() {
         })
       } else {
         formData.append('githubUrl', githubUrl)
-      }
+    }
 
       // Adicionar dados de customização se habilitado
       if (enableCustomization) {
@@ -113,7 +111,7 @@ function CreateProjectPage() {
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
       <Navbar />
-
+      
       <div className="flex-1 py-8 px-4 sm:px-6 md:px-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-8">
@@ -235,7 +233,7 @@ function CreateProjectPage() {
                 <div className="mt-3 flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
                   <CheckCircle className="w-4 h-4" />
                   <span>Valid link</span>
-                </div>
+              </div>
               )}
             </div>
           )}
@@ -302,7 +300,7 @@ function CreateProjectPage() {
                     placeholder='Example: "A financial SaaS"'
                     className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                   />
-                </div>
+                    </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
@@ -315,7 +313,7 @@ function CreateProjectPage() {
                     rows={3}
                     className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                   />
-                </div>
+                  </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
@@ -347,7 +345,7 @@ function CreateProjectPage() {
                     <FileText className="w-4 h-4" />
                     Submit
                   </>
-                )}
+              )}
               </button>
             </div>
           )}
@@ -372,4 +370,4 @@ function CreateProjectPage() {
   )
 }
 
-export default memo(CreateProjectPage)
+export default CreateProjectPage

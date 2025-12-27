@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Search, ExternalLink, Star, Code, Users } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/common'
 import Link from 'next/link'
 
 interface ReferenceProject {
