@@ -26,7 +26,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   
   try {
     await resend.emails.send({
-      from: 'Custom PE <noreply@custompe.com>',
+      from: 'Codervex <noreply@codervex.com>',
       to: options.to,
       subject: options.subject,
       html: options.html,
@@ -106,11 +106,11 @@ export async function sendWelcomeEmail(email: string, name: string): Promise<boo
       <body>
         <div class="container">
           <div class="header">
-            <h1>Bem-vindo ao Custom PE! 🎉</h1>
+            <h1>Bem-vindo ao Codervex! 🎉</h1>
           </div>
           <div class="content">
             <p>Olá, ${name}!</p>
-            <p>Bem-vindo ao Custom PE! Estamos felizes em tê-lo conosco.</p>
+            <p>Bem-vindo ao Codervex! Estamos felizes em tê-lo conosco.</p>
             <p><strong>Você tem direito a 1 prompt gratuito!</strong> Use-o para testar nossa plataforma.</p>
             <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard" class="button">
               Começar Agora
@@ -126,9 +126,9 @@ export async function sendWelcomeEmail(email: string, name: string): Promise<boo
 
   return sendEmail({
     to: email,
-    subject: 'Bem-vindo ao Custom PE! 🎉',
+    subject: 'Bem-vindo ao Codervex! 🎉',
     html,
-    text: `Bem-vindo ao Custom PE, ${name}! Você tem direito a 1 prompt gratuito. Acesse: ${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard`,
+    text: `Bem-vindo ao Codervex, ${name}! Você tem direito a 1 prompt gratuito. Acesse: ${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard`,
   })
 }
 

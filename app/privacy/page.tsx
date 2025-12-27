@@ -111,7 +111,7 @@ export default function PrivacyPage() {
                 8. Contato
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
-                Para questões sobre privacidade, entre em contato: <a href="mailto:privacy@custompe.com" className="text-primary-600 hover:underline">privacy@custompe.com</a>
+                Para questões sobre privacidade, entre em contato: <a href="mailto:privacy@codervex.com" className="text-primary-600 hover:underline">privacy@codervex.com</a>
               </p>
             </section>
 

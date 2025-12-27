@@ -80,13 +80,13 @@ async function main() {
 
   // Criar ou buscar usuário admin
   let adminUser = await prisma.user.findFirst({
-    where: { email: 'admin@custompe.com' },
+    where: { email: 'admin@codervex.com' },
   })
 
   if (!adminUser) {
     adminUser = await prisma.user.create({
       data: {
-        email: 'admin@custompe.com',
+        email: 'admin@codervex.com',
         name: 'Admin',
         password: 'placeholder', // Em produção, usar hash real
         subscription: 'monthly',

@@ -1,11 +1,16 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
+// Apenas proteger rotas que realmente precisam de autenticação
 const isProtectedRoute = createRouteMatcher([
-  '/dashboard(.*)',
   '/dashboard/create(.*)',
+  '/dashboard/result(.*)',
+  '/dashboard/settings(.*)',
+  '/api/prompt/generate(.*)',
 ])
 
 export default clerkMiddleware(async (auth, req) => {
+  // Dashboard principal pode ser acessado sem login
+  // Mas ações específicas serão protegidas no componente
   if (isProtectedRoute(req)) {
     await auth.protect()
   }

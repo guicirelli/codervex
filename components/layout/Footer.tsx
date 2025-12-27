@@ -14,7 +14,7 @@ export default function Footer() {
               <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-secondary-500 rounded-lg flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-white">Custom PE</span>
+              <span className="text-xl font-bold text-white">Codervex</span>
             </Link>
             <p className="text-gray-400 mb-4 max-w-md">
               Transforme qualquer projeto web em superprompt de IA e recrie sites instantaneamente. 
@@ -91,7 +91,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-800 dark:border-gray-900 mt-8 pt-8 text-center text-sm text-gray-400 dark:text-gray-500">
-          <p>&copy; {new Date().getFullYear()} Custom PE. Todos os direitos reservados.</p>
+          <p>&copy; {new Date().getFullYear()} Codervex. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>

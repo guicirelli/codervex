@@ -17,7 +17,7 @@
     ]
   },
   "features": {
-    "title": "Por que escolher Custom PE?",
+    "title": "Por que escolher Codervex?",
     "subtitle": "Funcionalidades que fazem a diferença",
     "items": [
       {
@@ -96,7 +96,7 @@
         "name": "Lucas Silva",
         "role": "Freelancer React/Next.js",
         "rating": 5,
-        "text": "Economizei horas de trabalho analisando projetos. O Custom PE transformou minha produtividade completamente!"
+        "text": "Economizei horas de trabalho analisando projetos. O Codervex transformou minha produtividade completamente!"
       },
       {
         "name": "Maria Santos",
@@ -114,7 +114,7 @@
   },
   "cta": {
     "title": "Pronto para transformar seus projetos?",
-    "subtitle": "Junte-se a centenas de desenvolvedores que já estão economizando tempo com Custom PE",
+    "subtitle": "Junte-se a centenas de desenvolvedores que já estão economizando tempo com Codervex",
     "button": "Criar Conta Gratuita",
     "secondaryText": "Sem cartão. Cancele quando quiser."
   }

@@ -1,37 +1,15 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Sparkles, Menu, X } from 'lucide-react'
-import { useState, useEffect } from 'react'
-import React from 'react'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
-import CtaButton from '@/components/shared/ui/CtaButton'
 import { cn } from '@/lib/utils/common'
+import { useUser } from '@clerk/nextjs'
+import { LogIn, UserPlus } from 'lucide-react'
 
-export default function Navbar() {
-  const pathname = usePathname()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-
-  useEffect(() => {
-    let ticking = false
-    
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          setScrolled(window.scrollY > 20)
-          ticking = false
-        })
-        ticking = true
-      }
-    }
-    
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  const isActive = (path: string) => pathname === path
+function Navbar() {
+  const { user } = useUser()
 
   return (
     <motion.nav
@@ -40,168 +18,49 @@ export default function Navbar() {
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className={cn(
         'sticky top-0 z-50 transition-all duration-300 border-b gpu-accelerated',
-        scrolled
-          ? 'bg-white/80 backdrop-blur-md shadow-lg border-gray-200'
-          : 'bg-white shadow-sm border-gray-200'
+        'bg-black/90 backdrop-blur-md shadow-lg border-gray-800'
       )}
     >
-      <div className="max-w-7xl mx-auto px-3 xs:px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16">
-        <div className="flex justify-between items-center h-14 xs:h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-1.5 xs:space-x-2">
-            <div className="w-8 h-8 xs:w-10 xs:h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-              <Sparkles className="w-4 h-4 xs:w-6 xs:h-6 text-white" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center h-16 md:h-20 relative">
+          {/* Centered Logo and Name */}
+          <Link href="/" className="flex items-center space-x-3 absolute left-1/2 transform -translate-x-1/2">
+            <div className="relative w-10 h-10 xs:w-12 xs:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 flex-shrink-0 overflow-hidden">
+              <Image
+                src="/images/logo codervex pronto.png"
+                alt="Codervex Logo"
+                fill
+                className="object-cover object-center"
+                priority
+                sizes="(max-width: 640px) 40px, (max-width: 768px) 48px, (max-width: 1024px) 56px, 64px"
+              />
             </div>
-            <span className="text-lg xs:text-xl font-bold text-black">Codervex</span>
+            <span className="text-xl md:text-2xl lg:text-3xl font-bold text-white">Codervex</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6 lg:space-x-8">
-            <Link 
-              href="/" 
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive('/') 
-                  ? 'text-primary-600 bg-primary-50' 
-                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-              }`}
-            >
-              Início
-            </Link>
-            <Link 
-              href="/projects/codervex" 
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive('/projects/codervex') 
-                  ? 'text-primary-600 bg-primary-50' 
-                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-              }`}
-            >
-              Case Study
-            </Link>
-            <Link 
-              href="/dashboard" 
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive('/dashboard') 
-                  ? 'text-primary-600 bg-primary-50' 
-                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-              }`}
-            >
-              Dashboard
-            </Link>
-            <Link 
-              href="/community" 
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive('/community') 
-                  ? 'text-primary-600 bg-primary-50' 
-                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-              }`}
-            >
-              Comunidade
-            </Link>
-            <Link 
-              href="/pricing" 
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive('/pricing') 
-                  ? 'text-primary-600 bg-primary-50' 
-                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-              }`}
-            >
-              Preços
-            </Link>
-          </div>
-
-          {/* Auth Buttons */}
-          <div className="hidden md:flex items-center space-x-3 lg:space-x-4">
-            <Link 
-              href="/auth/login" 
-              className="text-gray-700 hover:text-primary-600 font-medium transition-colors"
-            >
-              Entrar
-            </Link>
-            <CtaButton href="/auth/register" variant="primary" size="sm">
-              <span>Criar Conta</span>
-            </CtaButton>
-          </div>
-
-          {/* Mobile menu button */}
-          <button
-            className="md:hidden p-2 rounded-md text-gray-700 hover:text-primary-600 hover:bg-gray-50"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-200">
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            <Link
-              href="/"
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                isActive('/')
-                  ? 'text-primary-600 bg-primary-50'
-                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-              }`}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Início
-            </Link>
-            <Link
-              href="/projects/codervex"
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                isActive('/projects/codervex')
-                  ? 'text-primary-600 bg-primary-50'
-                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-              }`}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Case Study
-            </Link>
-            <Link
-              href="/dashboard"
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                isActive('/dashboard')
-                  ? 'text-primary-600 bg-primary-50'
-                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-              }`}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/pricing"
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                isActive('/pricing')
-                  ? 'text-primary-600 bg-primary-50'
-                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-              }`}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Preços
-            </Link>
-            <div className="pt-4 border-t border-gray-200 space-y-2">
+          {/* Login and Sign Up Buttons - Right */}
+          {!user && (
+            <div className="flex items-center gap-3 sm:gap-4 absolute right-0">
               <Link
                 href="/auth/login"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-50"
-                onClick={() => setMobileMenuOpen(false)}
+                className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 text-gray-300 hover:text-white font-semibold text-sm sm:text-base transition-colors rounded-lg hover:bg-gray-800/50"
               >
-                Entrar
+                <LogIn className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Login</span>
               </Link>
-              <div className="px-3" onClick={() => setMobileMenuOpen(false)}>
-                <CtaButton href="/auth/register" variant="primary" className="w-full">
-                  <span>Criar Conta</span>
-                </CtaButton>
-              </div>
+              <Link
+                href="/auth/register"
+                className="inline-flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 bg-primary-500 text-white font-semibold text-sm sm:text-base rounded-lg hover:bg-primary-500 transition-all shadow-lg hover:shadow-xl"
+              >
+                <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Sign Up</span>
+              </Link>
             </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </motion.nav>
   )
 }
 
+export default memo(Navbar)

@@ -6,7 +6,9 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/shared/layout/Navbar'
 import Footer from '@/components/shared/layout/Footer'
-import { Plus, FileText, Loader2, Calendar, ArrowRight, Hand } from 'lucide-react'
+import LoginModal from '@/components/shared/ui/LoginModal'
+import { usePlanRestrictions } from '@/hooks/usePlanRestrictions'
+import { Plus, FileText, Loader2, Calendar, ArrowRight, Hand, Lock, Sparkles, AlertCircle, Crown } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,20 +21,18 @@ interface Project {
 export default function DashboardPage() {
   const { user, isLoaded } = useUser()
   const router = useRouter()
+  const { plan, restrictions, isPlanActive } = usePlanRestrictions()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
+  const [showLoginModal, setShowLoginModal] = useState(false)
 
   useEffect(() => {
-    if (isLoaded && !user) {
-      router.push('/auth/login')
-    }
-  }, [isLoaded, user, router])
-
-  useEffect(() => {
-    if (user) {
+    if (user && isLoaded) {
       fetchProjects()
+    } else {
+      setLoading(false)
     }
-  }, [user])
+  }, [user, isLoaded])
 
   const fetchProjects = async () => {
     try {
@@ -48,68 +48,175 @@ export default function DashboardPage() {
     }
   }
 
+  const handleAction = (action: () => void) => {
+    if (!user) {
+      setShowLoginModal(true)
+      return
+    }
+    
+    // Verificar restrições do plano
+    if (restrictions.maxProjects !== null && projects.length >= restrictions.maxProjects) {
+      // Mostrar modal de upgrade
+      return
+    }
+    
+    action()
+  }
+
+  const canCreateProject = restrictions.canCreateProject && 
+    (restrictions.maxProjects === null || projects.length < restrictions.maxProjects)
+
   if (!isLoaded || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="text-center space-y-4">
-          <Loader2 className="w-12 h-12 animate-spin text-primary-600 mx-auto" />
-          <p className="text-gray-600 dark:text-gray-400">Carregando dashboard...</p>
+          <Loader2 className="w-12 h-12 animate-spin text-primary-500 mx-auto" />
+          <p className="text-gray-600 dark:text-gray-400">Loading dashboard...</p>
         </div>
       </div>
     )
   }
 
-  if (!user) {
-    return null
-  }
-
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
       <Navbar />
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)}
+        title="Login Required"
+        message="Please log in to create and manage your projects"
+      />
 
       <div className="flex-1 py-8 px-4 sm:px-6 md:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-3">
-              <Hand className="w-8 h-8 text-primary-600" />
-              Olá, {user.firstName || user.emailAddresses[0]?.emailAddress}
+              {user ? (
+                <>
+                  <Hand className="w-8 h-8 text-primary-500" />
+                  Hello, {user.firstName || user.emailAddresses[0]?.emailAddress}
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-8 h-8 text-primary-500" />
+                  Dashboard
+                </>
+              )}
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-400">
-              Gerencie seus projetos e superprompts
+              {user 
+                ? 'Manage your projects and superprompts'
+                : 'View the dashboard. Log in to create and manage projects.'
+              }
             </p>
           </div>
 
+          {/* Info do Plano */}
+          {user && (
+            <div className="mb-6 p-4 bg-primary-500/10 dark:bg-primary-500/20 border border-primary-500/30 dark:border-primary-500/30 rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Crown className="w-5 h-5 text-primary-500" />
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                  Plan: {plan === 'free' ? 'Free' : plan === 'monthly' ? 'Monthly' : 'Per Project'}
+                </span>
+                {restrictions.maxProjects !== null && (
+                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                    ({projects.length}/{restrictions.maxProjects} projects)
+                  </span>
+                )}
+              </div>
+              {plan === 'free' && (
+                <a
+                  href="/#pricing"
+                  className="text-xs text-primary-500 hover:text-primary-500 font-semibold"
+                >
+                  Upgrade
+                </a>
+              )}
+            </div>
+          )}
+
           {/* Botão Novo Projeto */}
-          <Link
-            href="/dashboard/create"
-            className="inline-flex items-center gap-3 px-8 py-4 bg-primary-600 text-white rounded-lg font-semibold text-lg hover:bg-primary-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 mb-10"
-          >
-            <Plus className="w-6 h-6" />
-            Novo Projeto
-          </Link>
+          {canCreateProject ? (
+            <div
+              onClick={() => handleAction(() => router.push('/dashboard/create'))}
+              className="inline-flex items-center gap-3 px-8 py-4 bg-primary-500 text-white rounded-lg font-semibold text-lg hover:bg-primary-500 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 mb-10 cursor-pointer"
+            >
+              <Plus className="w-6 h-6" />
+              {user ? 'New Project' : 'Create Project (Login required)'}
+              {!user && <Lock className="w-5 h-5" />}
+            </div>
+          ) : (
+            <div className="mb-10 p-6 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-bold text-yellow-900 dark:text-yellow-200 mb-2">
+                    Project limit reached
+                  </h3>
+                  <p className="text-sm text-yellow-800 dark:text-yellow-300 mb-4">
+                    You&apos;ve reached the limit of {restrictions.maxProjects} project(s) on the {plan === 'free' ? 'Free' : 'Per Project'} plan.
+                  </p>
+                  <a
+                    href="/#pricing"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg font-semibold text-sm hover:bg-primary-500 transition-colors"
+                  >
+                    <Crown className="w-4 h-4" />
+                    Upgrade
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Lista de Projetos */}
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-              Seus projetos
+              {user ? 'Your Projects' : 'Projects (example)'}
             </h2>
 
-            {projects.length === 0 ? (
+            {!user ? (
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl p-12 text-center border-2 border-dashed border-gray-300 dark:border-gray-700">
+                <div className="w-20 h-20 bg-primary-500/10 dark:bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Lock className="w-10 h-10 text-primary-500" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                  Log in to see your projects
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                  Create a free account to start analyzing projects and generating superprompts in minutes
+                </p>
+                <div className="flex gap-4 justify-center">
+                  <Link
+                    href="/auth/login"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg font-semibold hover:bg-primary-500 transition-colors shadow-md hover:shadow-lg"
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    className="inline-flex items-center gap-2 px-6 py-3 border-2 border-primary-500 text-primary-500 rounded-lg font-semibold hover:bg-primary-500/10 dark:hover:bg-primary-500/20 transition-colors"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              </div>
+            ) : projects.length === 0 ? (
               <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-12 text-center border-2 border-dashed border-gray-300 dark:border-gray-700">
                 <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  Você ainda não tem projetos analisados
+                  You don&apos;t have any analyzed projects yet
                 </p>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  Comece analisando seu primeiro projeto para ver o resultado aqui
+                  Start by analyzing your first project to see the results here
                 </p>
                 <Link
                   href="/dashboard/create"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-md hover:shadow-lg"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg font-semibold hover:bg-primary-500 transition-colors shadow-md hover:shadow-lg"
                 >
                   <Plus className="w-5 h-5" />
-                  Criar primeiro projeto
+                  Create first project
                 </Link>
               </div>
             ) : (
@@ -118,20 +225,20 @@ export default function DashboardPage() {
                   <Link
                     key={project.id}
                     href={`/dashboard/result/${project.id}`}
-                    className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 hover:shadow-xl hover:border-primary-300 dark:hover:border-primary-700 transition-all group"
+                    className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 hover:shadow-xl hover:border-primary-500 dark:hover:border-primary-500 transition-all group"
                   >
                     <div className="flex items-start justify-between mb-4">
-                      <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center group-hover:bg-primary-600 dark:group-hover:bg-primary-600 transition-colors">
-                        <FileText className="w-6 h-6 text-primary-600 dark:text-primary-400 group-hover:text-white transition-colors" />
+                      <div className="w-12 h-12 bg-primary-500/20 dark:bg-primary-500/20 rounded-lg flex items-center justify-center group-hover:bg-primary-500 dark:group-hover:bg-primary-500 transition-colors">
+                        <FileText className="w-6 h-6 text-primary-500 dark:text-primary-500 group-hover:text-white transition-colors" />
                       </div>
-                      <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors" />
+                      <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-primary-500 dark:group-hover:text-primary-500 transition-colors" />
                     </div>
-                    <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                      {project.name || 'Projeto sem nome'}
+                    <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2 group-hover:text-primary-500 dark:group-hover:text-primary-500 transition-colors">
+                      {project.name || 'Unnamed Project'}
                     </h3>
                     <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                       <Calendar className="w-4 h-4" />
-                      <span>Analisado em {new Date(project.createdAt).toLocaleDateString('pt-BR')}</span>
+                      <span>Analyzed on {new Date(project.createdAt).toLocaleDateString('en-US')}</span>
                     </div>
                   </Link>
                 ))}

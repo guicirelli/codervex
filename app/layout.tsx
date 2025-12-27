@@ -3,25 +3,30 @@ import { Inter } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
-import FeedbackWidget from '@/components/shared/ui/FeedbackWidget'
+import dynamicImport from 'next/dynamic'
+
+// Lazy load FeedbackWidget for better performance
+const FeedbackWidget = dynamicImport(() => import('@/components/shared/ui/FeedbackWidget'), {
+  ssr: false,
+})
 
 const inter = Inter({ 
   subsets: ['latin'],
   display: 'swap',
   preload: true,
   variable: '--font-inter',
+  fallback: ['system-ui', 'arial'],
+  adjustFontFallback: true,
 })
 
-export const dynamic = 'force-dynamic'
-
 export const metadata: Metadata = {
-  title: 'Codervex - Entendimento Profundo de Software para Desenvolvedores',
-  description: 'Transforme código complexo em contexto claro. Codervex reconstrói a intenção, arquitetura e regras implícitas de qualquer codebase, permitindo que você trabalhe com confiança e acelere o desenvolvimento.',
-  keywords: ['análise de código', 'entendimento de software', 'arquitetura de sistema', 'compreensão de código', 'código legado', 'documentação de sistema', 'engenharia reversa', 'IA para código', 'geração de prompt', 'otimização de desenvolvimento'],
+  title: 'Codervex - Deep Software Understanding for Developers',
+  description: 'Transform complex code into clear context. Codervex reconstructs the intent, architecture, and implicit rules of any codebase, allowing you to work with confidence and accelerate development.',
+  keywords: ['code analysis', 'software understanding', 'system architecture', 'code comprehension', 'legacy code', 'system documentation', 'reverse engineering', 'AI for code', 'prompt generation', 'development optimization'],
   authors: [{ name: 'Codervex' }],
   openGraph: {
-    title: 'Codervex - Entendimento Profundo de Software para Desenvolvedores',
-    description: 'Plataforma de entendimento profundo de software. Transforme código em contexto confiável para decisão e execução, acelerando seus projetos e reduzindo incertezas.',
+    title: 'Codervex - Deep Software Understanding for Developers',
+    description: 'Deep software understanding platform. Transform code into reliable context for decision and execution, accelerating your projects and reducing uncertainties.',
     url: 'https://www.codervex.com',
     siteName: 'Codervex',
     images: [
@@ -29,20 +34,22 @@ export const metadata: Metadata = {
         url: 'https://www.codervex.com/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Codervex - Entendimento Profundo de Software',
+        alt: 'Codervex - Deep Software Understanding',
       },
     ],
-    locale: 'pt_BR',
+    locale: 'en_US',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Codervex - Entendimento Profundo de Software para Desenvolvedores',
-    description: 'Transforme código complexo em contexto claro. Codervex reconstrói a intenção, arquitetura e regras implícitas de qualquer codebase.',
+    title: 'Codervex - Deep Software Understanding for Developers',
+    description: 'Transform complex code into clear context. Codervex reconstructs the intent, architecture, and implicit rules of any codebase.',
     creator: '@codervex',
     images: ['https://www.codervex.com/twitter-image.jpg'],
   },
 }
+
+export const dynamic = 'force-dynamic'
 
 export default function RootLayout({
   children,
@@ -55,22 +62,22 @@ export default function RootLayout({
     <ClerkProvider
       publishableKey={clerkKey || ''}
     >
-      <html lang="pt-BR" suppressHydrationWarning>
-        <body className={inter.className}>
-          {children}
-          <FeedbackWidget />
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#fff',
-                color: '#000',
-              },
-            }}
-          />
-        </body>
-      </html>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        {children}
+        <FeedbackWidget />
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#fff',
+              color: '#000',
+            },
+          }}
+        />
+      </body>
+    </html>
     </ClerkProvider>
   )
 }

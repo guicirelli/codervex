@@ -22,11 +22,11 @@ function TestimonialCard({
 }: TestimonialCardProps) {
   const initials = useMemo(() => {
     return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
   }, [name])
 
   return (
@@ -38,7 +38,7 @@ function TestimonialCard({
       className={cn('card bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 shadow-md gpu-accelerated', className)}
     >
       <div className="flex items-center mb-4">
-        <div className="w-12 h-12 bg-primary-600 dark:bg-primary-600 rounded-full flex items-center justify-center text-white font-semibold mr-4">
+        <div className="w-12 h-12 bg-primary-500 dark:bg-primary-500 rounded-full flex items-center justify-center text-white font-semibold mr-4">
           {initials}
         </div>
         <div>
@@ -62,7 +62,7 @@ function TestimonialCard({
       </div>
 
       <p className="text-gray-900 dark:text-white leading-relaxed relative pl-6 text-sm sm:text-base font-normal">
-        <span className="absolute left-0 top-0 text-4xl text-primary-500 dark:text-primary-400 leading-none opacity-40 font-serif pointer-events-none">
+        <span className="absolute left-0 top-0 text-4xl text-primary-500 dark:text-primary-500 leading-none opacity-40 font-serif pointer-events-none">
           &quot;
         </span>
         {text}

@@ -15,7 +15,7 @@ interface Step {
 const steps: Step[] = [
   {
     id: 'welcome',
-    title: 'Bem-vindo ao Custom PE! 👋',
+    title: 'Bem-vindo ao Codervex! 👋',
     description: 'Vamos te mostrar como transformar seus projetos em superprompts de IA em poucos passos.',
   },
   {
@@ -49,7 +49,7 @@ const steps: Step[] = [
   {
     id: 'complete',
     title: 'Pronto! 🎉',
-    description: 'Agora você está pronto para usar o Custom PE. Gere seu primeiro superprompt!',
+    description: 'Agora você está pronto para usar o Codervex. Gere seu primeiro superprompt!',
   },
 ]
 

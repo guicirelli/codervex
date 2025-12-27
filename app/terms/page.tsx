@@ -19,7 +19,7 @@ export default function TermsPage() {
                 1. Aceitação dos Termos
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
-                Ao usar o Custom PE, você concorda com estes termos de uso. Se não concordar, não use o serviço.
+                Ao usar o Codervex, você concorda com estes termos de uso. Se não concordar, não use o serviço.
               </p>
             </section>
 
@@ -43,7 +43,7 @@ export default function TermsPage() {
                 3. Propriedade Intelectual
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
-                Os prompts gerados são de sua propriedade. Você pode usá-los livremente. O serviço Custom PE e sua tecnologia são propriedade nossa.
+                Os prompts gerados são de sua propriedade. Você pode usá-los livremente. O serviço Codervex e sua tecnologia são propriedade nossa.
               </p>
             </section>
 
@@ -66,7 +66,7 @@ export default function TermsPage() {
                 5. Limitação de Responsabilidade
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
-                O Custom PE é fornecido &quot;como está&quot;. Não garantimos resultados específicos dos prompts gerados. Não somos responsáveis por perdas decorrentes do uso do serviço.
+                O Codervex é fornecido &quot;como está&quot;. Não garantimos resultados específicos dos prompts gerados. Não somos responsáveis por perdas decorrentes do uso do serviço.
               </p>
             </section>
 

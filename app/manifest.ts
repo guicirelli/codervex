@@ -2,8 +2,8 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Custom PE - Transforme projetos web em superprompts de IA',
-    short_name: 'Custom PE',
+    name: 'Codervex - Transforme projetos web em superprompts de IA',
+    short_name: 'Codervex',
     description: 'Transforme qualquer projeto web em um superprompt de IA e recrie sites instantaneamente',
     start_url: '/',
     display: 'standalone',

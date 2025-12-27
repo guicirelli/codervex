@@ -1,135 +1,162 @@
-import React from 'react'
+'use client'
+
+import React, { memo, useMemo } from 'react'
+
+export const dynamic = 'force-dynamic'
 import Link from 'next/link'
-import Navbar from '@/components/shared/layout/Navbar'
-import Footer from '@/components/shared/layout/Footer'
+import Image from 'next/image'
+import dynamicImport from 'next/dynamic'
+import { useUser } from '@clerk/nextjs'
 import {
   ArrowRight,
   Upload,
   FileText,
   Bot,
-  Sparkles,
   CheckCircle,
-  Code,
   Wand2,
   X,
-  Zap,
-  Shield,
   Clock,
-  TrendingUp,
-  Copy,
   Layers,
   Target,
   Rocket,
-  Star,
-  DollarSign,
-  Check,
-  Users,
+  Play,
   BarChart3,
   Lightbulb,
+  TrendingUp,
 } from 'lucide-react'
 
-export default function HomePage() {
+// Lazy load componentes pesados
+const Navbar = dynamicImport(() => import('@/components/shared/layout/Navbar'), {
+  ssr: true,
+  loading: () => <div className="h-16 bg-black" />,
+})
+
+const Footer = dynamicImport(() => import('@/components/shared/layout/Footer'), {
+  ssr: true,
+})
+
+function HomePage() {
+  const { user, isLoaded } = useUser()
+  
+  // Memoizar dados estáticos
+  const problemItems = useMemo(() => [
+    { icon: <Layers className="w-5 h-5" />, text: 'Large projects are hard to explain' },
+    { icon: <Clock className="w-5 h-5" />, text: 'Manual prompts waste time' },
+    { icon: <FileText className="w-5 h-5" />, text: 'Context gets lost' },
+    { icon: <X className="w-5 h-5" />, text: 'Results become inconsistent' },
+  ], [])
+  
+  const howItWorksSteps = useMemo(() => [
+    {
+      step: '1',
+      icon: <Upload className="w-10 h-10" />,
+      title: 'Send the project',
+      description: 'Upload your files (.zip or multiple files) or paste a GitHub repository link. Codervex accepts all common web development formats.',
+      details: [
+        'File Upload: .js, .ts, .jsx, .tsx, .json, .css, .html, .zip',
+        'GitHub Link: Paste any public repository URL',
+        'No size limits, no file count restrictions',
+      ],
+    },
+    {
+      step: '2',
+      icon: <FileText className="w-10 h-10" />,
+      title: 'Codervex interprets',
+      description: 'Our system reads your project structure, detects technologies, maps dependencies, and understands the codebase architecture.',
+      details: [
+        'Analyzes folder structure and file organization',
+        'Detects frameworks, libraries, and tools',
+        'Maps components, routes, and features',
+        'Identifies patterns and architecture decisions',
+      ],
+    },
+    {
+      step: '3',
+      icon: <Bot className="w-10 h-10" />,
+      title: 'Receive the prompt',
+      description: 'Get a complete, ready-to-use prompt with project summary, technology stack, system structure, and base instructions for AI.',
+      details: [
+        'Project Summary: Clear explanation of what it does',
+        'Technology Stack: All detected frameworks and tools',
+        'System Structure: Pages, features, and modules',
+        'Base Prompt: Ready to copy and use immediately',
+      ],
+    },
+  ], [])
+
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
       <Navbar />
 
-      {/* SEÇÃO 1 — HERO (Impacto Visual Máximo) */}
-      <section className="relative py-20 sm:py-24 md:py-32 lg:py-40 px-4 overflow-hidden">
-        {/* Background com gradiente e padrão */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-white to-primary-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAzNGMwIDIuMjA5LTEuNzkxIDQtNCA0cy00LTEuNzkxLTQtNCAxLjc5MS00IDQtNCA0IDEuNzkxIDQgNHptMTYgMTZjMCAyLjIwOS0xLjc5MSA0LTQgNHMtNC0xLjc5MS00LTQgMS43OTEtNCA0LTQgNCAxLjc5MSA0IDR6IiBmaWxsPSIjZGRkIiBmaWxsLW9wYWNpdHk9IjAuMSIvPjwvZz48L3N2Zz4=')] opacity-20 dark:opacity-10"></div>
+      {/* SECTION 1 — HERO */}
+      <section className="relative min-h-screen w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <div className="absolute inset-0 w-full h-full">
+          <Image
+            src="/images/background-home.png"
+            alt="Purple and Blue Modern Company Meeting Zoom Virtual Background"
+            fill
+            className="object-cover w-full h-full"
+            priority
+            quality={85}
+            sizes="100vw"
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70 dark:from-black/80 dark:via-black/70 dark:to-black/90"></div>
+          <div className="absolute inset-0 bg-primary-500/20"></div>
         </div>
 
-        <div className="relative max-w-7xl mx-auto text-center space-y-8 z-10">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full text-sm font-semibold text-primary-700 dark:text-primary-300 shadow-lg border border-primary-200 dark:border-primary-800 mb-6">
-            <Sparkles className="w-4 h-4" />
-            Intermediador entre código real e prompt bom
-          </div>
-
-          {/* Título Principal */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-gray-900 dark:text-white leading-tight tracking-tight">
-            Codervex transforma{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-400">
-              projetos reais
-            </span>{' '}
-            em instruções claras para criar, adaptar ou evoluir código com IA.
+        <div className="relative max-w-6xl mx-auto text-center space-y-6 z-10 w-full py-20">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight drop-shadow-lg">
+            If the code doesn&apos;t speak, Codervex makes it speak.
           </h1>
 
-          {/* Subtítulo */}
-          <p className="text-xl sm:text-2xl md:text-3xl text-gray-700 dark:text-gray-300 max-w-4xl mx-auto font-medium leading-relaxed">
-            Envie um projeto. Receba contexto. Gere prompts melhores.
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-200 max-w-3xl mx-auto font-medium leading-relaxed drop-shadow-md">
+            Transform real web projects into clear, reusable instructions for AI.
           </p>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Link
-              href="/dashboard/create"
-              className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-primary-600 text-white rounded-xl font-semibold text-lg hover:bg-primary-700 transition-all shadow-xl hover:shadow-2xl transform hover:scale-105"
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
+            <a
+              href="#how-it-works"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary-500 text-white rounded-xl font-bold text-lg hover:bg-primary-500 transition-all shadow-2xl hover:shadow-[0_0_30px_rgba(146,141,246,0.5)] transform hover:scale-105 border-2 border-primary-400/50"
             >
-              <Rocket className="w-5 h-5" />
-              Analisar um projeto
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
+              See Demo
+            </a>
             <Link
               href="/auth/register"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl font-semibold text-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-lg hover:shadow-xl"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/95 backdrop-blur-sm border-2 border-white/80 text-gray-900 rounded-xl font-bold text-lg hover:bg-white transition-all shadow-2xl hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transform hover:scale-105"
             >
-              <Star className="w-5 h-5" />
-              Começar agora
+              <Play className="w-5 h-5" />
+              Get Started
             </Link>
-          </div>
-
-          {/* Estatísticas Rápidas */}
-          <div className="flex flex-wrap justify-center items-center gap-8 pt-12 text-sm sm:text-base">
-            <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-              <Zap className="w-5 h-5 text-primary-600" />
-              <span className="font-semibold">Economize 8+ horas</span>
-            </div>
-            <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-              <Shield className="w-5 h-5 text-primary-600" />
-              <span className="font-semibold">100% Privado</span>
-            </div>
-            <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-              <Clock className="w-5 h-5 text-primary-600" />
-              <span className="font-semibold">Resultado em minutos</span>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* SEÇÃO 2 — PROBLEMA REAL (Dor Concreta) */}
-      <section className="relative py-20 sm:py-24 md:py-28 px-4 bg-white dark:bg-gray-900">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-50/50 to-transparent dark:via-gray-800/50"></div>
-        <div className="relative max-w-6xl mx-auto space-y-12">
-          <div className="text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 rounded-full text-sm font-semibold text-red-700 dark:text-red-400">
-              <X className="w-4 h-4" />
-              O Problema
-            </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
-              IA é poderosa, mas sem contexto ela erra.
+      {/* SECTION 2 — PROBLEM */}
+      <section className="relative w-full py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white leading-tight">
+              AI without context makes mistakes
             </h2>
-            <p className="text-xl sm:text-2xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
-              Código sem explicação vira prompt ruim.
-            </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { icon: <Layers className="w-6 h-6" />, text: 'Projetos grandes' },
-              { icon: <FileText className="w-6 h-6" />, text: 'Código espalhado' },
-              { icon: <Clock className="w-6 h-6" />, text: 'Prompt manual cansa' },
-              { icon: <X className="w-6 h-6" />, text: 'Resultado inconsistente' },
+              { icon: <Layers className="w-5 h-5" />, text: 'Large projects are hard to explain' },
+              { icon: <Clock className="w-5 h-5" />, text: 'Manual prompts waste time' },
+              { icon: <FileText className="w-5 h-5" />, text: 'Context gets lost' },
+              { icon: <X className="w-5 h-5" />, text: 'Results become inconsistent' },
             ].map((item, i) => (
               <div
                 key={i}
-                className="group flex flex-col items-center gap-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6 hover:border-red-400 dark:hover:border-red-600 hover:shadow-lg transition-all"
+                className="flex flex-col items-center gap-3 bg-white dark:bg-gray-900 border-2 border-primary-500/20 dark:border-primary-500/20 rounded-lg p-5 hover:border-primary-500 dark:hover:border-primary-500 hover:shadow-md transition-all"
               >
-                <div className="w-12 h-12 flex items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-primary-500/10 dark:bg-primary-500/10 text-primary-500 dark:text-primary-500">
                   {item.icon}
                 </div>
-                <span className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white text-center">
+                <span className="text-sm font-semibold text-gray-900 dark:text-white text-center leading-tight">
                   {item.text}
                 </span>
               </div>
@@ -138,209 +165,40 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* SEÇÃO 3 — SOLUÇÃO (O Que o Codervex Faz) */}
-      <section className="relative py-20 sm:py-24 md:py-28 px-4 bg-gradient-to-b from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxLjUiIGZpbGw9IiM3YzNhZWQiIG9wYWNpdHk9IjAuMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNhKSIvPjwvc3ZnPg==')] opacity-30 dark:opacity-20"></div>
-        <div className="relative max-w-6xl mx-auto space-y-12">
-          <div className="text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-100 dark:bg-primary-900/30 rounded-full text-sm font-semibold text-primary-700 dark:text-primary-300">
-              <Wand2 className="w-4 h-4" />
-              A Solução
-            </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
-              Codervex lê o código para você e explica o que ele faz em forma de instrução.
+      {/* SECTION 3 — RESULT (VISUAL TEMPLATES) */}
+      <section className="relative w-full py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-800">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white leading-tight mb-4">
+              What You Get
             </h2>
-            <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              Tradutor, não criador. Transformamos código complexo em contexto claro.
+            <p className="text-lg text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
+              See both templates side by side — Base Prompt and Custom Prompt
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-3 gap-8">
-            {[
-              {
-                icon: <Code className="w-10 h-10" />,
-                title: 'Entende estrutura',
-                desc: 'Mapeia componentes, rotas e dependências do projeto',
-                color: 'from-blue-500 to-blue-600',
-              },
-              {
-                icon: <FileText className="w-10 h-10" />,
-                title: 'Entende funcionalidades',
-                desc: 'Extrai o propósito e lógica de cada parte do sistema',
-                color: 'from-purple-500 to-purple-600',
-              },
-              {
-                icon: <Bot className="w-10 h-10" />,
-                title: 'Transforma em prompt',
-                desc: 'Gera instruções claras e reutilizáveis para sua IA',
-                color: 'from-primary-500 to-primary-600',
-              },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="group relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-8 space-y-4 shadow-lg hover:shadow-2xl transition-all hover:-translate-y-2"
-              >
-                <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform`}>
-                  {item.icon}
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{item.title}</h3>
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* SEÇÃO 4 — COMO FUNCIONA (3 Passos Simples) */}
-      <section className="relative py-20 sm:py-24 md:py-28 px-4 bg-white dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto space-y-16">
-          <div className="text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-100 dark:bg-primary-900/30 rounded-full text-sm font-semibold text-primary-700 dark:text-primary-300">
-              <Target className="w-4 h-4" />
-              Processo Simples
-            </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
-              Como funciona
-            </h2>
-            <p className="text-xl sm:text-2xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
-              Sem palavras técnicas. Sem prometer mágica. Apenas resultados.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
-            {[
-              {
-                step: '1',
-                icon: <Upload className="w-12 h-12" />,
-                title: 'Envie o projeto',
-                desc: 'Upload de arquivos ou link do GitHub. Simples e rápido.',
-                gradient: 'from-blue-500 to-cyan-500',
-              },
-              {
-                step: '2',
-                icon: <FileText className="w-12 h-12" />,
-                title: 'Codervex interpreta',
-                desc: 'Lê stack, estrutura e funcionalidades automaticamente.',
-                gradient: 'from-purple-500 to-pink-500',
-              },
-              {
-                step: '3',
-                icon: <Bot className="w-12 h-12" />,
-                title: 'Receba o prompt',
-                desc: 'Contexto pronto, organizado e copiável em segundos.',
-                gradient: 'from-primary-500 to-primary-600',
-              },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="relative group"
-              >
-                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-gradient-to-br from-primary-600 to-primary-700 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-xl z-10">
-                  {item.step}
-                </div>
-                <div className="relative bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-10 pt-16 space-y-6 text-center hover:border-primary-300 dark:hover:border-primary-700 transition-all shadow-lg hover:shadow-2xl hover:-translate-y-2">
-                  <div className={`w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center text-white shadow-xl group-hover:scale-110 transition-transform`}>
-                    {item.icon}
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{item.title}</h3>
-                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* SEÇÃO 5 — O RESULTADO (O Que o Usuário Ganha) */}
-      <section className="relative py-20 sm:py-24 md:py-28 px-4 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
-        <div className="max-w-7xl mx-auto space-y-16">
-          <div className="text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 rounded-full text-sm font-semibold text-green-700 dark:text-green-400">
-              <CheckCircle className="w-4 h-4" />
-              O Resultado
-            </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
-              O que você recebe
-            </h2>
-            <p className="text-xl sm:text-2xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
-              O usuário compra o resultado, não o processo.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-            {/* Resumo do Projeto */}
-            <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-8 lg:p-10 space-y-6 shadow-xl hover:shadow-2xl transition-all">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                  <BarChart3 className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Resumo do Projeto</h3>
-              </div>
-              <div className="space-y-6">
-                <div>
-                  <p className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <Code className="w-5 h-5 text-primary-600" />
-                    Tecnologias
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {['Next.js', 'TypeScript', 'Tailwind'].map((tech) => (
-                      <span
-                        key={tech}
-                        className="px-4 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-lg text-sm font-medium"
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <Layers className="w-5 h-5 text-primary-600" />
-                    Estrutura
-                  </p>
-                  <p className="text-gray-700 dark:text-gray-300">Landing Page, Dashboard, Auth</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <Lightbulb className="w-5 h-5 text-primary-600" />
-                    Funcionalidades
-                  </p>
-                  <ul className="space-y-2 text-gray-700 dark:text-gray-300">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                      Login/Registro
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                      CRUD completo
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                      Formulários com validação
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* Prompt Final */}
-            <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-8 lg:p-10 space-y-6 shadow-xl hover:shadow-2xl transition-all">
-              <div className="flex items-center justify-between">
+          {/* Templates lado a lado */}
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            {/* Base Prompt */}
+            <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-lg">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-white" />
+                  <div className="w-10 h-10 rounded-lg bg-primary-500 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-5 h-5 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Prompt Final</h3>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Base Prompt</h3>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Without customization</p>
+                  </div>
                 </div>
-                <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl">
-                  <Copy className="w-4 h-4" />
-                  Copiar
-                </button>
+                <div className="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg text-xs font-semibold text-gray-600 dark:text-gray-400">
+                  Example
+                </div>
               </div>
-              <div className="bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-950 dark:to-gray-900 rounded-xl p-6 text-sm font-mono text-gray-100 dark:text-gray-200 whitespace-pre-wrap leading-relaxed border border-gray-700">
-{`Crie um projeto Next.js usando TypeScript.
+              <div className="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 text-xs font-mono text-gray-100 dark:text-gray-200 whitespace-pre-wrap leading-relaxed border border-gray-700 min-h-[350px]">
+{`Create a Next.js project using TypeScript.
 
-Estrutura:
+Structure:
 - Landing Page
 - Dashboard
 - Auth
@@ -350,307 +208,360 @@ Stack:
 - TypeScript
 - Tailwind CSS
 
-Funcionalidades:
-- Login/Registro
-- CRUD completo
-- Formulários com validação`}
+Features:
+- User authentication
+- Dashboard with charts
+- Responsive design
+- Dark mode support`}
               </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* SEÇÃO 6 — CUSTOMIZAÇÃO (Diferencial Real) */}
-      <section className="relative py-20 sm:py-24 md:py-28 px-4 bg-white dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto space-y-16">
-          <div className="text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 rounded-full text-sm font-semibold text-purple-700 dark:text-purple-400">
-              <Wand2 className="w-4 h-4" />
-              Diferencial
-            </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
-              Ajuste o prompt ao seu objetivo
-            </h2>
-            <p className="text-xl sm:text-2xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
-              Transforme o Codervex em copiloto. É texto, é regra, é concatenação — não é IA paga.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-            {/* Formulário de Customização */}
-            <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-8 lg:p-10 space-y-6 shadow-xl">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
-                  <Target className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Personalize seu prompt</h3>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                  <Lightbulb className="w-4 h-4 text-primary-600" />
-                  O que você quer criar agora?
-                </label>
-                <input
-                  type="text"
-                  defaultValue="um SaaS financeiro"
-                  className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-primary-600" />
-                  O que deve mudar?
-                </label>
-                <textarea
-                  defaultValue="remover auth, novo layout"
-                  rows={3}
-                  className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                  <Code className="w-4 h-4 text-primary-600" />
-                  Tecnologias preferidas
-                </label>
-                <input
-                  type="text"
-                  defaultValue="Tailwind, App Router"
-                  className="w-full rounded-lg border-2 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary-600" />
-                  Estilo
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  {['Clean', 'Corporativo', 'Moderno'].map((style) => (
-                    <button
-                      key={style}
-                      className="px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-800 dark:text-gray-200 hover:border-primary-500 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all"
-                    >
-                      {style}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <button className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-lg font-semibold hover:from-primary-700 hover:to-primary-800 transition-all shadow-lg hover:shadow-xl">
-                <Wand2 className="w-5 h-5" />
-                Gerar prompt customizado
-              </button>
-            </div>
-
-            {/* Resultado Customizado */}
-            <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-8 lg:p-10 space-y-6 shadow-xl">
-              <div className="flex items-center justify-between">
+            {/* Custom Prompt */}
+            <div className="bg-white dark:bg-gray-800 border-2 border-primary-500/30 dark:border-primary-500/30 rounded-xl p-6 shadow-lg">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-                    <CheckCircle className="w-6 h-6 text-white" />
+                  <div className="w-10 h-10 rounded-lg bg-primary-500 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="w-5 h-5 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Prompt Customizado</h3>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Custom Prompt</h3>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">With customization</p>
+                  </div>
                 </div>
-                <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg">
-                  <Copy className="w-4 h-4" />
-                  Copiar
-                </button>
+                <div className="px-3 py-1 bg-primary-500/20 dark:bg-primary-500/20 rounded-lg text-xs font-semibold text-primary-500 dark:text-primary-500">
+                  Example
+                </div>
               </div>
-              <div className="bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-950 dark:to-gray-900 rounded-xl p-6 text-sm font-mono text-gray-100 dark:text-gray-200 whitespace-pre-wrap leading-relaxed min-h-[350px] border border-gray-700">
-{`Adapte o projeto para um SaaS financeiro.
+              <div className="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 text-xs font-mono text-gray-100 dark:text-gray-200 whitespace-pre-wrap leading-relaxed border border-gray-700 min-h-[350px]">
+{`Adapt the project for a financial SaaS.
 
-Mudanças:
-- Remover sistema de auth
-- Implementar novo layout corporativo
-- Usar Tailwind CSS e App Router
+Changes:
+- Remove auth system
+- Implement new corporate layout
+- Use Tailwind CSS and App Router
+- Add financial dashboard widgets
 
-Mantenha:
-- Estrutura de dashboard
-- Sistema de formulários
-- Funcionalidades CRUD
+Keep:
+- Dashboard structure
+- Form system
+- CRUD functionality
+- Responsive design
 
-Stack preferida:
-- Next.js (App Router)
-- TypeScript
-- Tailwind CSS
-- Estilo: Corporativo`}
+New Requirements:
+- Financial charts integration
+- Transaction history
+- Account management
+- Payment processing UI`}
               </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* SEÇÃO 7 — PRICING (Planos e Valores) */}
-      <section className="relative py-20 sm:py-24 md:py-28 px-4 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
-        <div className="max-w-7xl mx-auto space-y-16">
-          <div className="text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-100 dark:bg-primary-900/30 rounded-full text-sm font-semibold text-primary-700 dark:text-primary-300">
-              <DollarSign className="w-4 h-4" />
-              Planos e Valores
-            </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
-              O custo de adivinhar software
-            </h2>
-            <p className="text-xl sm:text-2xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
-              Codervex não é barato porque resolve problema caro. Reduz risco, tempo e incerteza.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
-            {/* Plano Gratuito */}
-            <div className="bg-white dark:bg-gray-800 border-2 border-dashed border-gray-400 dark:border-gray-600 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all">
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Gratuito</h3>
-                <div className="mb-4">
-                  <span className="text-5xl font-bold text-primary-600 dark:text-primary-500">R$ 0</span>
-                </div>
-                <p className="text-lg text-gray-800 dark:text-gray-200 font-medium">Ideal para testar</p>
-                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 font-semibold">
-                  Economize 4-6 horas de análise
-                </p>
-              </div>
-
-              <ul className="space-y-4 mb-8">
-                {[
-                  '1 superprompt gratuito',
-                  'Análise completa do projeto',
-                  'Histórico de prompts',
-                ].map((feature, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-primary-600 dark:text-primary-400 mt-0.5 flex-shrink-0" />
-                    <span className="text-base text-gray-800 dark:text-gray-200">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                href="/auth/register"
-                className="block w-full text-center px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                Começar Grátis
-              </Link>
-            </div>
-
-            {/* Plano Por Projeto */}
-            <div className="bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all">
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Por Projeto</h3>
-                <div className="mb-4">
-                  <span className="text-5xl font-bold text-primary-600 dark:text-primary-500">R$ 4,90</span>
-                  <span className="text-lg text-gray-700 dark:text-gray-300">/projeto</span>
-                </div>
-                <p className="text-lg text-gray-800 dark:text-gray-200 font-medium">Ideal para uso ocasional</p>
-                <p className="mt-2 text-sm text-primary-700 dark:text-primary-400 font-bold">
-                  Economize R$ 200-300 em tempo por projeto
-                </p>
-              </div>
-
-              <ul className="space-y-4 mb-8">
-                {[
-                  '1 superprompt gerado',
-                  'Análise completa do projeto',
-                  'Detecção de stack tecnológica',
-                  'Mapeamento de componentes',
-                  'Histórico de prompts',
-                  'Suporte por email',
-                ].map((feature, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-primary-600 dark:text-primary-400 mt-0.5 flex-shrink-0" />
-                    <span className="text-base text-gray-800 dark:text-gray-200">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                href="/auth/register"
-                className="block w-full text-center px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg"
-              >
-                Começar Agora
-              </Link>
-            </div>
-
-            {/* Plano Mensal */}
-            <div className="bg-white dark:bg-gray-800 border-2 border-primary-600 dark:border-primary-500 rounded-2xl p-8 shadow-2xl relative hover:shadow-3xl transition-all">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-primary-600 to-primary-700 text-white px-6 py-2 rounded-full text-sm font-bold shadow-xl">
-                Mais Popular
-              </div>
-
-              <div className="text-center mb-8 pt-4">
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Assinatura Mensal</h3>
-                <div className="mb-4">
-                  <span className="text-5xl font-bold text-primary-600 dark:text-primary-500">R$ 19,90</span>
-                  <span className="text-lg text-gray-700 dark:text-gray-300">/mês</span>
-                </div>
-                <p className="text-lg text-gray-800 dark:text-gray-200 font-medium mb-2">Ideal para uso frequente</p>
-                <p className="text-sm text-primary-700 dark:text-primary-400 font-bold mb-2">7 dias grátis para testar!</p>
-                <p className="text-sm text-primary-700 dark:text-primary-400 font-semibold">
-                  Entendimento sistemático de sistemas complexos
-                </p>
-              </div>
-
-              <ul className="space-y-4 mb-8">
-                {[
-                  { text: 'Prompts ilimitados', highlight: true },
-                  'Análise completa do projeto',
-                  'Detecção de stack tecnológica',
-                  'Mapeamento de componentes',
-                  'Histórico completo',
-                  'Suporte prioritário',
-                  'API access (em breve)',
-                ].map((feature, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-primary-600 dark:text-primary-400 mt-0.5 flex-shrink-0" />
-                    <span className={`text-base ${typeof feature === 'object' && feature.highlight ? 'text-gray-900 dark:text-white font-semibold' : 'text-gray-800 dark:text-gray-200'}`}>
-                      {typeof feature === 'object' ? feature.text : feature}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                href="/auth/register"
-                className="block w-full text-center px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-lg font-semibold hover:from-primary-700 hover:to-primary-800 transition-all shadow-xl"
-              >
-                Assinar Agora
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Final */}
-      <section className="relative py-20 sm:py-24 md:py-28 px-4 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAzNGMwIDIuMjA5LTEuNzkxIDQtNCA0cy00LTEuNzkxLTQtNCAxLjc5MS00IDQtNCA0IDEuNzkxIDQgNHptMTYgMTZjMCAyLjIwOS0xLjc5MSA0LTQgNHMtNC0xLjc5MS00LTQgMS43OTEtNCA0LTQgNCAxLjc5MSA0IDR6IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz48L2c+PC9zdmc+')] opacity-20"></div>
-        <div className="relative max-w-5xl mx-auto text-center space-y-10 z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-semibold text-white border border-white/20">
-            <Rocket className="w-4 h-4" />
-            Pronto para começar?
-          </div>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-            Envie um projeto, veja o resumo e copie um prompt pronto.
-          </h2>
-          <p className="text-xl sm:text-2xl text-gray-200 max-w-3xl mx-auto">
-            Fluxo simples. Contexto real. Pronto para IA trabalhar direito.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
+          {/* CTA para Dashboard */}
+          <div className="text-center">
             <Link
-              href="/dashboard/create"
-              className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-primary-600 text-white rounded-xl font-semibold text-lg hover:bg-primary-700 transition-all shadow-xl hover:shadow-2xl transform hover:scale-105"
+              href="/dashboard"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-primary-500 text-white rounded-xl font-semibold text-lg hover:bg-primary-500 transition-all shadow-xl hover:shadow-2xl"
             >
               <Rocket className="w-5 h-5" />
-              Analisar um projeto
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              Try It Now in Dashboard
+              <ArrowRight className="w-5 h-5" />
             </Link>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
+              Full functionality available in the dashboard
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 4 — WHAT CODERVEX DOES */}
+      <section className="relative w-full py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white leading-tight mb-8">
+              What Codervex actually does
+            </h2>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Codervex does */}
+              <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-lg">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Does</h3>
+                <ul className="space-y-3">
+                  {[
+                    'Reads real project structure',
+                    'Detects stack and patterns',
+                    'Translates code into intent',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-primary-500 dark:text-primary-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-base text-gray-700 dark:text-gray-300">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Codervex does not */}
+              <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-lg">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Does not</h3>
+                <ul className="space-y-3">
+                  {[
+                    'Generate code',
+                    'Guess logic',
+                    'Replace developers',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <X className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-base text-gray-700 dark:text-gray-300">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 5 — HOW IT WORKS (DEMONSTRATION) */}
+      <section id="how-it-works" className="relative w-full py-24 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-800">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 dark:text-white leading-tight mb-6">
+              How it works
+            </h2>
+            <p className="text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
+              Three simple steps to transform your project into AI-ready instructions
+            </p>
+          </div>
+
+          <div className="relative">
+            {/* Linha conectora (desktop) */}
+            <div className="hidden md:block absolute top-24 left-0 right-0 h-0.5 bg-primary-500/30"></div>
+
+            <div className="grid md:grid-cols-3 gap-8 lg:gap-12 relative">
+              {howItWorksSteps.map((item, i) => (
+                <div key={i} className="relative group">
+                  {/* Número do passo */}
+                  <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-2xl z-20 border-4 border-white dark:border-gray-800">
+                    {item.step}
+                  </div>
+
+                  {/* Seta conectora (desktop) */}
+                  {i < 2 && (
+                    <div className="hidden md:block absolute top-12 -right-6 lg:-right-12 w-12 lg:w-24 h-0.5 bg-primary-500/30 z-10">
+                      <ArrowRight className="absolute right-0 top-1/2 transform -translate-y-1/2 w-6 h-6 text-primary-500" />
+                    </div>
+                  )}
+
+                  {/* Card principal */}
+                  <div className="relative bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-8 pt-16 text-center hover:border-primary-500 dark:hover:border-primary-500 transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-2 group-hover:scale-105">
+                    {/* Ícone */}
+                    <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-primary-500 flex items-center justify-center text-white shadow-xl group-hover:scale-110 transition-transform">
+                      {item.icon}
+                    </div>
+
+                    {/* Título */}
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                      {item.title}
+                    </h3>
+
+                    {/* Descrição */}
+                    <p className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
+                      {item.description}
+                    </p>
+
+                    {/* Detalhes */}
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-5 text-left border border-gray-200 dark:border-gray-700">
+                      <ul className="space-y-3">
+                        {item.details.map((detail, idx) => (
+                          <li key={idx} className="flex items-start gap-3">
+                            <CheckCircle className="w-5 h-5 text-primary-500 mt-0.5 flex-shrink-0" />
+                            <span className="text-sm text-gray-700 dark:text-gray-300">{detail}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA Final */}
+          <div className="text-center mt-16">
             <Link
               href="/auth/register"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm border-2 border-white/20 text-white rounded-xl font-semibold text-lg hover:bg-white/20 transition-all"
+              className="inline-flex items-center gap-3 px-10 py-5 bg-primary-500 text-white rounded-xl font-bold text-lg hover:bg-primary-500 transition-all shadow-2xl hover:shadow-[0_0_30px_rgba(146,141,246,0.5)] transform hover:scale-105"
             >
-              <Users className="w-5 h-5" />
-              Começar agora
+              <Play className="w-6 h-6" />
+              Try It Now
+              <ArrowRight className="w-6 h-6" />
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 6 — CUSTOMIZATION (VISUAL ONLY) */}
+      <section className="relative w-full py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white leading-tight mb-4">
+              Don&apos;t just generate a prompt. Shape it.
+            </h2>
+            <p className="text-lg text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
+              Adapt the generated context to your real goal.
+            </p>
+          </div>
+
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-8 border-2 border-gray-200 dark:border-gray-700">
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Target className="w-5 h-5 text-primary-500" />
+                  Customization Options
+                </h3>
+                <ul className="space-y-3">
+                  {[
+                    'Define your objective',
+                    'Specify what should change',
+                    'Choose preferred technologies',
+                    'Select style preferences',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-primary-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-base text-gray-700 dark:text-gray-300">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Wand2 className="w-5 h-5 text-primary-500" />
+                  Result
+                </h3>
+                <p className="text-base text-gray-700 dark:text-gray-300 leading-relaxed">
+                  Receive a tailored prompt that perfectly aligns your project&apos;s structure with your specific objectives, ready to use with any AI tool.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 7 — CASE STUDY */}
+      <section className="relative w-full py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-800">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white leading-tight mb-4">
+              Real examples
+            </h2>
+            <p className="text-lg text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
+              Codervex is built to help developers explain complex projects to AI without rewriting everything manually.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Exemplo 1 */}
+            <div className="bg-white dark:bg-gray-800 border-2 border-primary-500/30 dark:border-primary-500/30 rounded-xl p-6 shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-primary-500 flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-base font-semibold text-gray-900 dark:text-white leading-relaxed">
+                    Analyzed a Next.js SaaS with 40+ files and generated a reusable prompt in seconds.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Exemplo 2 */}
+            <div className="bg-white dark:bg-gray-800 border-2 border-primary-500/30 dark:border-primary-500/30 rounded-xl p-6 shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-primary-500 flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-base font-semibold text-gray-900 dark:text-white leading-relaxed">
+                    Processed a React e-commerce platform with 60+ components and extracted complete architecture in minutes.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Exemplo 3 */}
+            <div className="bg-white dark:bg-gray-800 border-2 border-primary-500/30 dark:border-primary-500/30 rounded-xl p-6 shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-primary-500 flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-base font-semibold text-gray-900 dark:text-white leading-relaxed">
+                    Transformed a Vue.js admin dashboard with TypeScript into a clear, structured AI prompt ready to use.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 8 — DASHBOARD (Logged in users only) */}
+      {isLoaded && user && (
+        <section className="relative w-full py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
+          <div className="max-w-6xl mx-auto text-center">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white leading-tight mb-4">
+              Your Dashboard
+            </h2>
+            <p className="text-lg text-gray-700 dark:text-gray-300 max-w-2xl mx-auto mb-8">
+              Manage your projects and superprompts
+            </p>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-primary-500 text-white rounded-xl font-semibold text-lg hover:bg-primary-500 transition-all shadow-xl hover:shadow-2xl"
+            >
+              <Rocket className="w-5 h-5" />
+              Access Dashboard
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* SECTION 9 — PRICING */}
+      <section id="pricing" className="relative w-full py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white leading-tight mb-4">
+              Free while in MVP
+            </h2>
+            <p className="text-lg text-gray-700 dark:text-gray-300">
+              No credit card required
+            </p>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 border-2 border-primary-500 dark:border-primary-500 rounded-xl p-8 shadow-2xl max-w-md mx-auto">
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Free</h3>
+              <ul className="space-y-3 mb-6 text-left">
+                {[
+                  'Unlimited tests',
+                  'Full project summary',
+                  'Stack detection',
+                  'Prompt generation',
+                ].map((feature, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-primary-500 dark:text-primary-500 mt-0.5 flex-shrink-0" />
+                    <span className="text-base text-gray-800 dark:text-gray-200">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mb-6">MVP version</p>
+              <Link
+                href="/auth/register"
+                className="block w-full text-center px-6 py-3 bg-primary-500 text-white rounded-lg font-semibold text-base hover:bg-primary-500 transition-all shadow-lg hover:shadow-xl"
+              >
+                Start Free
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -659,3 +570,5 @@ Stack preferida:
     </div>
   )
 }
+
+export default memo(HomePage)

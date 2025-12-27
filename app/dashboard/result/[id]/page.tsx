@@ -58,11 +58,11 @@ export default function ResultPage() {
         const data = await response.json()
         setResult(data)
       } else {
-        toast.error('Projeto não encontrado')
+        toast.error('Project not found')
         router.push('/dashboard')
       }
     } catch (error) {
-      toast.error('Erro ao carregar resultado')
+      toast.error('Error loading result')
       router.push('/dashboard')
     } finally {
       setLoading(false)
@@ -73,10 +73,10 @@ export default function ResultPage() {
     try {
       await navigator.clipboard.writeText(text)
       setCopied(true)
-      toast.success('Prompt copiado!')
+      toast.success('Prompt copied!')
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
-      toast.error('Erro ao copiar')
+      toast.error('Error copying')
     }
   }
 
@@ -84,16 +84,16 @@ export default function ResultPage() {
     if (!result) return
     
     const basePrompt = result.prompt
-    const custom = `Adapte o projeto para: ${customForm.objective || 'novo objetivo'}
+    const custom = `Adapt the project for: ${customForm.objective || 'new objective'}
 
-Mudanças desejadas:
-${customForm.changes || 'Nenhuma mudança específica'}
+Desired changes:
+${customForm.changes || 'No specific changes'}
 
-Tecnologias preferidas:
-${customForm.technologies || 'Manter tecnologias originais'}
+Preferred technologies:
+${customForm.technologies || 'Keep original technologies'}
 
-Estilo:
-${customForm.style || 'Manter estilo original'}
+Style:
+${customForm.style || 'Keep original style'}
 
 ---
 
@@ -101,7 +101,7 @@ ${basePrompt}`
     
     setCustomPrompt(custom)
     setCustomizing(true)
-    toast.success('Prompt customizado gerado!')
+    toast.success('Custom prompt generated!')
   }
 
   if (!isLoaded || loading) {
@@ -109,7 +109,7 @@ ${basePrompt}`
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="text-center space-y-4">
           <Loader2 className="w-12 h-12 animate-spin text-primary-600 mx-auto" />
-          <p className="text-gray-600 dark:text-gray-400">Carregando resultado...</p>
+          <p className="text-gray-600 dark:text-gray-400">Loading result...</p>
         </div>
       </div>
     )
@@ -130,11 +130,11 @@ ${basePrompt}`
             className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 mb-8 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Voltar para Dashboard
+            Back to Dashboard
           </Link>
 
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-8">
-            Resumo do Projeto
+            Project Summary
           </h1>
 
           {/* Resumo */}
@@ -143,7 +143,7 @@ ${basePrompt}`
               <div>
                 <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <FileText className="w-5 h-5 text-primary-600" />
-                  Tecnologias usadas
+                  Technologies Used
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {result.summary?.technologies?.map((tech, index) => (
@@ -160,7 +160,7 @@ ${basePrompt}`
               <div>
                 <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <FileText className="w-5 h-5 text-primary-600" />
-                  Funcionalidades
+                  Features
                 </h3>
                 <ul className="space-y-2">
                   {result.summary?.features?.map((feature, index) => (
@@ -175,7 +175,7 @@ ${basePrompt}`
 
             {result.summary?.structure && (
               <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
-                <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4">Estrutura</h3>
+                <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-4">Structure</h3>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{result.summary.structure}</p>
               </div>
             )}
@@ -186,7 +186,7 @@ ${basePrompt}`
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <Wand2 className="w-6 h-6 text-primary-600" />
-                Prompt Base Gerado
+                Generated Base Prompt
               </h2>
               <button
                 onClick={() => handleCopy(result.prompt)}
@@ -195,12 +195,12 @@ ${basePrompt}`
                 {copied ? (
                   <>
                     <Check className="w-4 h-4" />
-                    Copiado!
+                    Copied!
                   </>
                 ) : (
                   <>
                     <Copy className="w-4 h-4" />
-                    Copiar Prompt
+                    Copy Prompt
                   </>
                 )}
               </button>
@@ -208,7 +208,7 @@ ${basePrompt}`
 
             <div className="bg-gray-900 dark:bg-gray-950 rounded-xl p-6 border-2 border-gray-800 dark:border-gray-800">
               <pre className="text-sm text-gray-100 dark:text-gray-200 whitespace-pre-wrap font-mono leading-relaxed overflow-x-auto">
-                {result.prompt || 'Carregando prompt...'}
+                {result.prompt || 'Loading prompt...'}
               </pre>
             </div>
           </div>
@@ -218,7 +218,7 @@ ${basePrompt}`
             <div className="flex items-center gap-2 mb-6">
               <Wand2 className="w-6 h-6 text-primary-600" />
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                Ajustar prompt ao seu objetivo
+                Adjust prompt to your goal
               </h2>
             </div>
 
@@ -227,25 +227,25 @@ ${basePrompt}`
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                    O que você quer criar agora?
+                    What do you want to create now?
                   </label>
                   <input
                     type="text"
                     value={customForm.objective}
                     onChange={(e) => setCustomForm({ ...customForm, objective: e.target.value })}
-                    placeholder="ex: um SaaS financeiro"
+                    placeholder="e.g: a financial SaaS"
                     className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                    O que deve mudar?
+                    What should change?
                   </label>
                   <textarea
                     value={customForm.changes}
                     onChange={(e) => setCustomForm({ ...customForm, changes: e.target.value })}
-                    placeholder="ex: remover auth, novo layout"
+                    placeholder="e.g: remove auth, new layout"
                     rows={3}
                     className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
@@ -253,23 +253,23 @@ ${basePrompt}`
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                    Tecnologias preferidas
+                    Preferred Technologies
                   </label>
                   <input
                     type="text"
                     value={customForm.technologies}
                     onChange={(e) => setCustomForm({ ...customForm, technologies: e.target.value })}
-                    placeholder="ex: Tailwind, App Router"
+                    placeholder="e.g: Tailwind, App Router"
                     className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                    Estilo
+                    Style
                   </label>
                   <div className="grid grid-cols-3 gap-2">
-                    {['Clean', 'Corporativo', 'Moderno'].map((style) => (
+                    {['Clean', 'Corporate', 'Modern'].map((style) => (
                       <button
                         key={style}
                         onClick={() => setCustomForm({ ...customForm, style })}
@@ -290,21 +290,21 @@ ${basePrompt}`
                   className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl"
                 >
                   <Wand2 className="w-5 h-5" />
-                  Gerar prompt customizado
+                  Generate custom prompt
                 </button>
               </div>
 
               {/* Resultado Customizado */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">Prompt Customizado</h3>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">Custom Prompt</h3>
                   {customPrompt && (
                     <button
                       onClick={() => handleCopy(customPrompt)}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors text-sm"
                     >
                       <Copy className="w-4 h-4" />
-                      Copiar
+                      Copy
                     </button>
                   )}
                 </div>
@@ -315,7 +315,7 @@ ${basePrompt}`
                     </pre>
                   ) : (
                     <p className="text-gray-500 dark:text-gray-400 text-center py-20">
-                      Preencha o formulário e clique em &quot;Gerar prompt customizado&quot;
+                      Fill out the form and click &quot;Generate custom prompt&quot;
                     </p>
                   )}
                 </div>

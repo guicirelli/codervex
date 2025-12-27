@@ -51,6 +51,14 @@ const config: Config = {
     },
   },
   plugins: [],
+  // Otimizações de performance
+  corePlugins: {
+    preflight: true,
+  },
+  // Purge CSS otimizado
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
 }
 
 export default config

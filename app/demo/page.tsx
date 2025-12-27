@@ -14,7 +14,7 @@ export default function DemoPage() {
           {/* Hero */}
           <div className="text-center mb-16">
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
-              Veja o Custom PE em{' '}
+              Veja o Codervex em{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-secondary-500">
                 Ação
               </span>
@@ -252,7 +252,7 @@ Gere o projeto completo agora:`}
             <div className="card bg-gradient-to-br from-primary-600 to-secondary-500 text-white">
               <div className="text-center mb-8">
                 <h2 className="text-4xl font-bold mb-4">
-                  Por que usar Custom PE?
+                  Por que usar Codervex?
                 </h2>
               </div>
               <div className="grid md:grid-cols-2 gap-6">
