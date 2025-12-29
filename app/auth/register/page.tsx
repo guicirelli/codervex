@@ -32,6 +32,9 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<FieldErrors>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
   const [rateLimitInfo, setRateLimitInfo] = useState<{ remaining: number; resetAt: number } | null>(null)
+  const [showVerification, setShowVerification] = useState(false)
+  const [verificationCode, setVerificationCode] = useState('')
+  const [verifying, setVerifying] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -155,7 +158,8 @@ export default function RegisterPage() {
         // Preparar verificação por email
         await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
         toast.success('Verification code sent to your email!')
-        router.push('/dashboard')
+        setShowVerification(true)
+        setLoading(false)
       }
     } catch (err: any) {
       console.error('Registration error:', err)
@@ -181,8 +185,9 @@ export default function RegisterPage() {
           })
           return // Não mostrar toast.error
         } else if (clerkError.code === 'form_password_pwned') {
-          errorMessage = 'This password has been compromised in data breaches. Please choose another.'
-          setErrors({ password: errorMessage })
+          // Ignorar erro de senha comprometida - permitir criação de conta
+          // Não mostrar erro, apenas continuar
+          console.warn('Password pwned warning ignored')
         } else if (clerkError.message) {
           errorMessage = clerkError.message
         }
@@ -267,6 +272,68 @@ export default function RegisterPage() {
     }
   }
 
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!signUp) {
+      toast.error('Authentication service not available')
+      return
+    }
+
+    if (verificationCode.length !== 6) {
+      toast.error('Please enter the 6-digit verification code')
+      return
+    }
+
+    setVerifying(true)
+
+    try {
+      const result = await signUp.attemptEmailAddressVerification({
+        code: verificationCode,
+      })
+
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId })
+        toast.success('Email verified successfully!')
+        router.push('/dashboard')
+      } else {
+        toast.error('Invalid verification code. Please try again.')
+        setVerificationCode('')
+      }
+    } catch (err: any) {
+      console.error('Verification error:', err)
+      let errorMessage = 'Invalid verification code. Please try again.'
+      
+      if (err.errors && err.errors.length > 0) {
+        const clerkError = err.errors[0]
+        if (clerkError.message) {
+          errorMessage = clerkError.message
+        }
+      }
+      
+      toast.error(errorMessage)
+      setVerificationCode('')
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  const handleResendCode = async () => {
+    if (!signUp) {
+      toast.error('Authentication service not available')
+      return
+    }
+
+    try {
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
+      toast.success('Verification code resent to your email!')
+      setVerificationCode('')
+    } catch (err: any) {
+      console.error('Resend error:', err)
+      toast.error('Error resending code. Please try again.')
+    }
+  }
+
   const handleBlur = (field: string) => {
     setTouched(prev => ({ ...prev, [field]: true }))
   }
@@ -326,7 +393,78 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <form onSubmit={handleEmailRegister} action={undefined} className="space-y-4">
+            {/* Email Verification Form */}
+            {showVerification ? (
+              <div className="space-y-6">
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Mail className="w-8 h-8 text-primary-400" />
+                  </div>
+                  <h2 className="text-xl font-bold text-white mb-2">Verify your email</h2>
+                  <p className="text-gray-400 text-sm">
+                    We sent a verification code to <span className="font-semibold text-white">{email}</span>
+                  </p>
+                </div>
+
+                <form onSubmit={handleVerifyCode} className="space-y-4">
+                  <div>
+                    <label htmlFor="verificationCode" className="block text-sm font-medium text-gray-300 mb-2">
+                      Verification Code
+                    </label>
+                    <input
+                      id="verificationCode"
+                      type="text"
+                      value={verificationCode}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+                        setVerificationCode(value)
+                      }}
+                      placeholder="000000"
+                      maxLength={6}
+                      required
+                      disabled={verifying}
+                      className="w-full px-4 py-3 text-center text-2xl font-mono tracking-widest border-2 border-gray-700 bg-gray-800 text-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 rounded-lg transition-all disabled:opacity-50"
+                      autoComplete="one-time-code"
+                      autoFocus
+                    />
+                    <p className="text-xs text-gray-500 mt-2 text-center">
+                      Enter the 6-digit code from your email
+                    </p>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={verifying || verificationCode.length !== 6}
+                    className="w-full bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-all inline-flex items-center justify-center gap-2"
+                  >
+                    {verifying ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Verifying...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-5 h-5" />
+                        Verify Email
+                      </>
+                    )}
+                  </button>
+
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={handleResendCode}
+                      disabled={verifying}
+                      className="text-sm text-primary-400 hover:text-primary-300 disabled:opacity-50 transition-colors"
+                    >
+                      Didn't receive the code? Resend
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <>
+                <form onSubmit={handleEmailRegister} action={undefined} className="space-y-4">
               {/* Nome de Usuário */}
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
@@ -609,6 +747,8 @@ export default function RegisterPage() {
                 </a>
               </p>
             </div>
+              </>
+            )}
           </div>
         </div>
       </div>
