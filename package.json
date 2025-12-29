@@ -9,8 +9,9 @@
     "lint": "next lint",
     "postinstall": "prisma generate",
     "clean": "rm -rf .next && echo Cache limpo",
-    "clean:win": "if exist .next rmdir /s /q .next && echo Cache limpo",
-    "fresh": "if exist .next rmdir /s /q .next && npm run dev"
+    "clean:win": "powershell -Command \"if (Test-Path .next) { Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue }; Write-Host 'Cache cleared'\"",
+    "fresh": "npm run clean:win && npm run dev",
+    "rebuild": "npm run clean:win && npm run build"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.36.5",
