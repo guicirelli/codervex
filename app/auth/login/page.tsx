@@ -130,7 +130,7 @@ export default function LoginPage() {
         if (clerkError.code === 'form_identifier_not_found') {
           // Usuário não encontrado - mostrar aviso amigável
           isUserNotFound = true
-          errorMessage = 'No account found with this email address. Please sign up first to create your account.'
+          errorMessage = 'No account found with this email address. You need to sign up first to create an account. Click "Sign Up" to register.'
         } else if (clerkError.code === 'form_password_incorrect') {
           errorMessage = 'Invalid email or password. Please check your credentials and try again.'
         } else if (clerkError.message) {
@@ -209,7 +209,7 @@ export default function LoginPage() {
           const isUserNotFound = clerkError.includes('not found') || clerkError.includes('does not exist')
           
           if (isUserNotFound) {
-            errorMsg = `No account found with this ${provider === 'oauth_google' ? 'Google' : 'GitHub'} account. Please sign up first to create your account.`
+            errorMsg = `No account found with this ${provider === 'oauth_google' ? 'Google' : 'GitHub'} account. You need to sign up first to create an account. Click "Sign Up" to register.`
             // Mostrar aviso amigável ao invés de erro
             toast(errorMsg, {
               icon: 'ℹ️',

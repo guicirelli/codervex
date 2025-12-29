@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
         })
       } catch (createError: any) {
         console.error('Error creating user:', createError)
-        // Se for erro de constraint única, tentar buscar o usuário existente
+        // If unique constraint error, try to find existing user
         if (createError.code === 'P2002') {
           try {
             const existingUser = await prisma.user.findFirst({
@@ -178,6 +178,7 @@ export async function GET(request: NextRequest) {
             console.error('Error looking up existing user:', lookupError)
           }
         }
+        // Return 500 for creation errors, not 503
         return NextResponse.json(
           { error: 'Error creating user account. Please try signing in again.' },
           { status: 500 }
@@ -209,20 +210,27 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error: any) {
-    console.error('Erro ao buscar identidade:', error)
+    console.error('Error fetching user identity:', error)
     
-    // Melhorar mensagens de erro
-    let errorMessage = 'Error fetching user identity'
+    // Only return 503 for actual service unavailability
+    // For other errors, return 500 or appropriate status
+    let errorMessage = 'Error fetching user identity. Please try again.'
     let statusCode = 500
     
-    if (error.message?.includes('prisma') || error.message?.includes('database') || error.code === 'P1001') {
-      errorMessage = 'Database connection error. Please try again later.'
+    // Database connection errors - return 503
+    if (error.code === 'P1001' || error.code === 'P1000' || error.message?.includes('Can\'t reach database server')) {
+      errorMessage = 'Database service temporarily unavailable. Please try again in a moment.'
       statusCode = 503
-    } else if (error.message?.includes('clerk') || error.message?.includes('authentication')) {
-      errorMessage = 'Authentication service error. Please try signing in again.'
+    } 
+    // Authentication service errors - return 503
+    else if (error.message?.includes('clerk') && error.message?.includes('unavailable')) {
+      errorMessage = 'Authentication service temporarily unavailable. Please try again in a moment.'
       statusCode = 503
-    } else if (error.message) {
-      errorMessage = error.message
+    }
+    // Other errors - return 500
+    else {
+      errorMessage = 'Error fetching user identity. Please try again.'
+      statusCode = 500
     }
     
     return NextResponse.json(
@@ -304,7 +312,7 @@ export async function PUT(request: NextRequest) {
 
     if (!currentUser) {
       return NextResponse.json(
-        { error: 'Usuário não encontrado' },
+        { error: 'User not found' },
         { status: 404 }
       )
     }
@@ -392,7 +400,7 @@ export async function PUT(request: NextRequest) {
     })
 
     return NextResponse.json({
-      message: 'Identidade atualizada com sucesso',
+      message: 'Identity updated successfully',
       identity: {
         username: updatedUser.username,
         displayName: updatedUser.displayName,
@@ -403,7 +411,7 @@ export async function PUT(request: NextRequest) {
     })
 
   } catch (error: any) {
-    console.error('Erro ao atualizar identidade:', error)
+    console.error('Error updating identity:', error)
     
     // Tratar erro de constraint única
     if (error.code === 'P2002') {
@@ -458,7 +466,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error: any) {
-    console.error('Erro ao verificar username:', error)
+    console.error('Error checking username:', error)
     return NextResponse.json(
       { error: 'Error checking username availability. Please try again.' },
       { status: 500 }

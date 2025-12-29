@@ -40,8 +40,8 @@ export default function Navbar() {
         })
       }
     } catch (error) {
-      console.error('Erro ao carregar identidade:', error)
-      // Fallback
+      console.error('Error loading identity:', error)
+      // Fallback - use Clerk data if API fails
       setIdentity({
         username: null,
         displayName: user?.firstName || null,
@@ -111,7 +111,7 @@ export default function Navbar() {
                   className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 text-gray-300 hover:text-white font-semibold text-sm sm:text-base transition-colors rounded-lg hover:bg-gray-800/50"
                 >
                   <LogIn className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="hidden sm:inline">Login</span>
+                  <span className="hidden sm:inline">Sign In</span>
                 </Link>
                 <Link
                   href="/auth/register"
