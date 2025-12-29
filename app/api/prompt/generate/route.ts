@@ -119,6 +119,23 @@ export async function POST(request: NextRequest) {
             value: repoUrl
           })
 
+          // Extrair nome do repositório para título
+          let repoTitle = 'GitHub Project'
+          if (analysis.repoName) {
+            repoTitle = analysis.repoName
+          } else {
+            // Tentar extrair da URL
+            try {
+              const url = new URL(repoUrl.startsWith('http') ? repoUrl : `https://${repoUrl}`)
+              const pathParts = url.pathname.split('/').filter(p => p)
+              if (pathParts.length >= 2) {
+                repoTitle = pathParts[pathParts.length - 1]
+              }
+            } catch {
+              repoTitle = 'GitHub Project'
+            }
+          }
+
           // Salvar prompt no histórico (se usuário existir)
           let savedPromptId = `temp-${Date.now()}`
           if (user) {
@@ -126,7 +143,7 @@ export async function POST(request: NextRequest) {
               const savedPrompt = await prisma.prompt.create({
                 data: {
                   userId: user.id,
-                  title: `GitHub Project - ${new Date().toLocaleDateString('en-US')}`,
+                  title: repoTitle,
                   content: analysis.markdown,
                   projectType: analysis.analysis.projectType,
                   stack: analysis.analysis.stack,
@@ -219,10 +236,18 @@ export async function POST(request: NextRequest) {
           let savedPromptId = `temp-${Date.now()}`
           if (user) {
             try {
+              // Usar nome do arquivo ou repoName como título
+              let uploadTitle = 'Uploaded Project'
+              if (analysis.repoName) {
+                uploadTitle = analysis.repoName
+              } else if (zipFile.name) {
+                uploadTitle = zipFile.name.replace('.zip', '')
+              }
+              
               const savedPrompt = await prisma.prompt.create({
                 data: {
                   userId: user.id,
-                  title: `Uploaded Project - ${new Date().toLocaleDateString('en-US')}`,
+                  title: uploadTitle,
                   content: analysis.markdown,
                   projectType: analysis.analysis.projectType,
                   stack: analysis.analysis.stack,

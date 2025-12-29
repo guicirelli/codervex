@@ -114,9 +114,10 @@ export async function PUT(request: NextRequest) {
 
     // Atualizar avatar
     if (avatar !== undefined) {
-      if (avatar && avatar.length > 500) {
+      // Se for base64, pode ser muito longo - permitir até 1MB (base64)
+      if (avatar && avatar.length > 1000000) {
         return NextResponse.json(
-          { error: 'Avatar URL is too long. Please use a shorter URL' },
+          { error: 'Avatar image is too large. Please use a smaller image.' },
           { status: 400 }
         )
       }

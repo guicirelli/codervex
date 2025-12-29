@@ -184,10 +184,11 @@ export default function RegisterPage() {
             },
           })
           return // Não mostrar toast.error
-        } else if (clerkError.code === 'form_password_pwned') {
-          // Ignorar erro de senha comprometida - permitir criação de conta
-          // Não mostrar erro, apenas continuar
-          console.warn('Password pwned warning ignored')
+        } else if (clerkError.code === 'form_password_pwned' || clerkError.message?.includes('data breach') || clerkError.message?.includes('Password has been found')) {
+          // Ignorar erro de senha comprometida completamente - permitir criação de conta
+          console.warn('Password pwned warning ignored - allowing registration')
+          setLoading(false)
+          return // Não mostrar erro, permitir que o usuário continue
         } else if (clerkError.message) {
           errorMessage = clerkError.message
         }

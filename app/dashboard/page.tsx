@@ -214,9 +214,11 @@ export default function DashboardPage() {
       setCustomInstructions('')
       setEnableCustomization(false)
       
-      // Recarregar histórico após nova análise
+      // Recarregar histórico após nova análise (com delay para garantir que foi salvo)
       if (user) {
-        loadHistory()
+        setTimeout(() => {
+          loadHistory()
+        }, 1000)
       }
       
       // Atualizar a página para mostrar o resultado

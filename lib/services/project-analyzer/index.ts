@@ -25,6 +25,7 @@ export interface AnalysisOutput {
     markdown: string
     prompt: string
   }
+  repoName?: string
 }
 
 export async function runAnalysis(input: AnalysisInput): Promise<AnalysisOutput> {
@@ -83,7 +84,8 @@ export async function runAnalysis(input: AnalysisInput): Promise<AnalysisOutput>
         framework: analysis.framework,
         projectType: analysis.projectType
       },
-      canonical: document.canonical
+      canonical: document.canonical,
+      repoName: repoName
     }
   } catch (error: any) {
     // Limpar em caso de erro
