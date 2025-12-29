@@ -84,20 +84,20 @@ export default function DashboardPage() {
           const local = loadLocalHistory()
           setHistory(local)
           setHistoryStorageAvailable(true) // local history still works
-          setHistoryWarning('Using local history (DATABASE_URL not configured).')
+          setHistoryWarning('')
         }
       } else {
         const local = loadLocalHistory()
         setHistory(local)
         setHistoryStorageAvailable(true)
-        setHistoryWarning(local.length > 0 ? 'Using local history.' : 'Prompt history is temporarily unavailable.')
+        setHistoryWarning('')
       }
     } catch (error) {
       console.error('Error loading history:', error)
       const local = loadLocalHistory()
       setHistory(local)
       setHistoryStorageAvailable(true)
-      setHistoryWarning(local.length > 0 ? 'Using local history.' : 'Prompt history is temporarily unavailable.')
+      setHistoryWarning('')
     } finally {
       setLoadingHistory(false)
     }
@@ -281,9 +281,7 @@ export default function DashboardPage() {
         content: data.prompt,
       })
       setHistory(mergedLocal)
-      if (!historyWarning) {
-        setHistoryWarning('Using local history (DATABASE_URL not configured).')
-      }
+      // Intentionally do not show any local-history banner in the UI.
       
       // Limpar formulário
       setLink('')
