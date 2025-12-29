@@ -458,7 +458,7 @@ export default function RegisterPage() {
                       disabled={verifying}
                       className="text-sm text-primary-400 hover:text-primary-300 disabled:opacity-50 transition-colors"
                     >
-                      Didn't receive the code? Resend
+                      Didn&apos;t receive the code? Resend
                     </button>
                   </div>
                 </form>

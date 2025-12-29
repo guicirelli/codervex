@@ -189,8 +189,7 @@ export async function POST(request: NextRequest) {
               stack: analysis.analysis.stack,
               framework: analysis.analysis.framework,
               projectType: analysis.analysis.projectType
-            },
-            canonical: analysis.canonical
+            }
           })
         } catch (error: any) {
           logger.error('Error analyzing GitHub repo', { error: error.message, userId, stack: error.stack })
@@ -295,8 +294,7 @@ export async function POST(request: NextRequest) {
               stack: analysis.analysis.stack,
               framework: analysis.analysis.framework,
               projectType: analysis.analysis.projectType
-            },
-            canonical: analysis.canonical
+            }
           })
         } catch (error: any) {
           logger.error('Error analyzing upload', { error: error.message, userId, stack: error.stack })

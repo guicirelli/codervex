@@ -2,7 +2,7 @@
 
 import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/shared/layout/Navbar'
 import Footer from '@/components/shared/layout/Footer'
@@ -30,7 +30,7 @@ export default function DashboardPage() {
 
 
   // Carregar histórico de análises
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     if (!user) return
     
     setLoadingHistory(true)
@@ -45,14 +45,14 @@ export default function DashboardPage() {
     } finally {
       setLoadingHistory(false)
     }
-  }
+  }, [user])
 
   // Carregar histórico quando usuário estiver logado
   useEffect(() => {
     if (user && isLoaded) {
       loadHistory()
     }
-  }, [user, isLoaded])
+  }, [user, isLoaded, loadHistory])
 
   const validateGitHubLink = (url: string): boolean => {
     if (!url.trim()) return false
