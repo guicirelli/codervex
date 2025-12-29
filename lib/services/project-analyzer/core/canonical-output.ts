@@ -165,33 +165,71 @@ export function generateCanonicalMarkdown(context: CanonicalContext): string {
 
 /**
  * Generates canonical prompt for AI usage
+ * Portfolio-specific prompts focus on "what this says about who built it"
  */
 export function generateCanonicalPrompt(context: CanonicalContext): string {
   const confidence = context.source.confidence === 'high' ? 85 : context.source.confidence === 'medium' ? 70 : 50
   const contextJson = JSON.stringify(context, null, 2)
   
   const lines: string[] = []
-  lines.push('You are an execution engine.')
-  lines.push('')
-  lines.push('Use ONLY the context below.')
-  lines.push('Do NOT infer features.')
-  lines.push('Do NOT introduce systems not listed.')
-  lines.push('Do NOT assume user intent.')
-  lines.push('If information is missing, respond: "Not detected".')
-  lines.push('')
-  lines.push('If confidence < 70%, avoid prescriptive decisions.')
-  lines.push('')
-  lines.push('Context:')
-  lines.push(contextJson)
-  lines.push('')
-  lines.push('Checklist before answering:')
-  lines.push('- Did you add something not listed?')
-  lines.push('- Did you assume backend or auth?')
-  lines.push('- Did you exceed the blueprint?')
-  lines.push('')
-  lines.push('If yes: remove it or mark as OUT OF SCOPE.')
-  lines.push('')
-  lines.push(`Current confidence: ${confidence}%`)
+  
+  // Portfolio-specific prompt structure
+  if (context.project.blueprint === 'PortfolioBlueprint') {
+    lines.push('You are analyzing a developer portfolio.')
+    lines.push('')
+    lines.push('Your task: Explain what this portfolio communicates about the developer\'s technical level,')
+    lines.push('based STRICTLY on the provided context.')
+    lines.push('')
+    lines.push('Focus on:')
+    lines.push('- Technical competence demonstrated through code structure')
+    lines.push('- Project presentation quality')
+    lines.push('- Modern tooling and best practices usage')
+    lines.push('- Professional positioning clarity')
+    lines.push('')
+    lines.push('Do NOT:')
+    lines.push('- Assume backend capabilities')
+    lines.push('- Invent user flows')
+    lines.push('- Introduce authentication')
+    lines.push('- Suggest monetization')
+    lines.push('- Reframe as SaaS or product')
+    lines.push('- Infer experience beyond visible signals')
+    lines.push('')
+    lines.push('If any required data is missing, respond: "Not detected".')
+    lines.push('')
+    lines.push('Context:')
+    lines.push(contextJson)
+    lines.push('')
+    lines.push('Generate output focused on:')
+    lines.push('1. What technical skills are demonstrated')
+    lines.push('2. What the architecture patterns communicate')
+    lines.push('3. What professional level is indicated')
+    lines.push('4. What strengths and limitations are visible')
+    lines.push('')
+    lines.push(`Confidence: ${confidence}%`)
+  } else {
+    // Standard prompt for other blueprints
+    lines.push('You are an execution engine.')
+    lines.push('')
+    lines.push('Use ONLY the context below.')
+    lines.push('Do NOT infer features.')
+    lines.push('Do NOT introduce systems not listed.')
+    lines.push('Do NOT assume user intent.')
+    lines.push('If information is missing, respond: "Not detected".')
+    lines.push('')
+    lines.push('If confidence < 70%, avoid prescriptive decisions.')
+    lines.push('')
+    lines.push('Context:')
+    lines.push(contextJson)
+    lines.push('')
+    lines.push('Checklist before answering:')
+    lines.push('- Did you add something not listed?')
+    lines.push('- Did you assume backend or auth?')
+    lines.push('- Did you exceed the blueprint?')
+    lines.push('')
+    lines.push('If yes: remove it or mark as OUT OF SCOPE.')
+    lines.push('')
+    lines.push(`Current confidence: ${confidence}%`)
+  }
   
   return lines.join('\n')
 }

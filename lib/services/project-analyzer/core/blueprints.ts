@@ -140,21 +140,28 @@ export const BLUEPRINTS: Record<string, Blueprint> = {
   },
   PortfolioBlueprint: {
     name: 'PortfolioBlueprint',
-    description: 'Professionals, freelancers, showcase',
-    whenToUse: ['Professionals', 'Freelancers', 'Showcase'],
-    objective: 'Credibility',
+    description: 'Developer portfolio - showcases projects, technical skills and professional positioning',
+    whenToUse: [
+      'Public-facing developer portfolio',
+      'Project showcase with visual assets',
+      'Professional positioning site',
+      'Technical competence demonstration'
+    ],
+    objective: 'Demonstrate technical competence, project experience and professional positioning',
     structure: {
-      pages: ['about', 'projects', 'skills', 'contact'],
-      entities: ['project', 'skill'],
-      systems: ['project showcase', 'contact form']
+      pages: ['hero', 'about', 'projects', 'skills', 'contact'],
+      entities: ['project', 'skill', 'case-study'],
+      systems: ['project showcase', 'contact form', 'multilingual content']
     },
     coreFlows: [
-      'Visit → scan → trust → contact'
+      'Visit → scan → trust → contact',
+      'Project discovery → technical review → professional assessment'
     ],
-    risks: ['Excessive animation', 'Empty text'],
+    risks: ['Excessive animation', 'Empty text', 'Weak project presentation'],
     output: {
       personalBrand: true,
-      simpleStructure: true
+      simpleStructure: true,
+      seoCritical: true
     }
   },
   DocumentationBlueprint: {

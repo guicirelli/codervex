@@ -38,6 +38,14 @@ function excludeImpossibleBlueprints(signals: ProjectSignals): string[] {
     excluded.push('EcommerceBlueprint')
   }
   
+  // PortfolioBlueprint exclusion rules (hard rules)
+  if (signals.hasCheckout) {
+    excluded.push('PortfolioBlueprint') // Portfolios don't have checkout
+  }
+  if (signals.hasDashboardUI && signals.authUsageDetected) {
+    excluded.push('PortfolioBlueprint') // Portfolios don't have multi-tenant auth
+  }
+  
   // DashboardBlueprint exclusion rules
   if (!signals.hasDashboardUI && !signals.appState) {
     excluded.push('DashboardBlueprint')
@@ -86,14 +94,13 @@ function calculateBlueprintScores(
   if (signals.hasEditorialFlow) scores.LandingCROBlueprint -= 2
   if (signals.authUsageDetected) scores.LandingCROBlueprint -= 3
   
-  // PortfolioBlueprint
-  if (signals.onePage) scores.PortfolioBlueprint += 2
-  if (signals.hasProjects) scores.PortfolioBlueprint += 4
-  if (signals.personalIdentity) scores.PortfolioBlueprint += 3
-  if (signals.hasPrimaryCTA) scores.PortfolioBlueprint += 2
-  if (signals.hasBlogPosts) scores.PortfolioBlueprint -= 2
-  if (signals.hasEditorialFlow) scores.PortfolioBlueprint -= 2
-  if (signals.authUsageDetected) scores.PortfolioBlueprint -= 3
+  // PortfolioBlueprint (enhanced scoring)
+  if (signals.hasProjects) scores.PortfolioBlueprint += 6 // Strong signal
+  if (signals.personalIdentity) scores.PortfolioBlueprint += 4
+  if (signals.seoHeavy) scores.PortfolioBlueprint += 2 // SEO is important for portfolios
+  if (signals.onePage) scores.PortfolioBlueprint += 1
+  if (signals.hasPrimaryCTA) scores.PortfolioBlueprint += 1
+  // Exclusions applied above
   
   // ContentSiteBlueprint
   if (signals.hasBlogPosts) scores.ContentSiteBlueprint += 5

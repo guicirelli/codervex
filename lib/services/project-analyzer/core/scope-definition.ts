@@ -147,7 +147,39 @@ export function generateScopeDefinition(
     excluded_concepts.push('GraphQL')
   }
   
-  // Blueprint-specific exclusions
+  // Blueprint-specific definitions
+  if (blueprint.name === 'PortfolioBlueprint') {
+    what_it_is.push('Developer portfolio')
+    what_it_is.push('Professional showcase site')
+    what_it_is.push('Stateless public-facing application')
+    
+    what_it_does.push('Showcases selected projects')
+    what_it_does.push('Demonstrates technical competence')
+    what_it_does.push('Communicates professional identity')
+    what_it_does.push('Presents professional profile')
+    if (evidence.has_seo_files) {
+      what_it_does.push('Optimized for SEO and public discoverability')
+    }
+    if (evidence.has_i18n) {
+      what_it_does.push('Supports multilingual content')
+    }
+    
+    // Portfolio-specific exclusions (hard rules)
+    what_it_does_not_do.push('User authentication')
+    what_it_does_not_do.push('Payment processing')
+    what_it_does_not_do.push('SaaS platform functionality')
+    what_it_does_not_do.push('Customer data management')
+    what_it_does_not_do.push('Interactive dashboards')
+    what_it_does_not_do.push('Multi-tenant systems')
+    what_it_does_not_do.push('Business workflows')
+    excluded_concepts.push('Checkout flows')
+    excluded_concepts.push('User accounts')
+    excluded_concepts.push('Admin panels')
+    excluded_concepts.push('CRM logic')
+    excluded_concepts.push('Background jobs')
+    excluded_concepts.push('Databases (except static content)')
+  }
+  
   if (blueprint.output.noUI) {
     what_it_does_not_do.push('User interfaces')
     excluded_concepts.push('Frontend components')

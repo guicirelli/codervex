@@ -112,10 +112,35 @@ export function collectSignals(
     files.some(f => f.includes('checkout') || f.includes('cart') || f.includes('stripe') || f.includes('paypal'))
   )
   
-  // Detect Projects
+  // Detect Projects (enhanced detection for portfolios)
   const hasProjects = !!(
-    folders.some(f => f.includes('project') || f.includes('portfolio') || f.includes('work')) ||
-    files.some(f => f.includes('project') || f.includes('portfolio'))
+    folders.some(f => {
+      const lower = f.toLowerCase()
+      return lower.includes('project') || 
+             lower.includes('portfolio') || 
+             lower.includes('work') ||
+             lower.includes('projetos') ||
+             lower.includes('case-studies')
+    }) ||
+    files.some(f => {
+      const lower = f.toLowerCase()
+      return lower.includes('project') || 
+             lower.includes('portfolio') ||
+             lower.includes('work')
+    }) ||
+    // Detect project images
+    files.some(f => {
+      const lower = f.toLowerCase()
+      return (lower.includes('public') || lower.includes('img') || lower.includes('images')) &&
+             (lower.includes('project') || lower.includes('projeto') || lower.includes('portfolio'))
+    }) ||
+    // Detect project routes
+    routes.some(r => {
+      const lower = r.toLowerCase()
+      return lower.includes('project') || 
+             lower.includes('portfolio') ||
+             lower.includes('work')
+    })
   )
   
   // Detect Blog Posts

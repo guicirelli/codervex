@@ -44,6 +44,7 @@ export interface EvidenceGraph {
   has_blog_structure: boolean
   has_content_folder: boolean
   has_markdown_files: boolean
+  has_i18n: boolean
   
   // SEO & Metadata
   has_seo_files: boolean
@@ -168,6 +169,16 @@ export function buildEvidenceGraph(
   const has_content_folder = folders.some(f => f.includes('content') || f.includes('posts') || f.includes('blog'))
   const has_markdown_files = files.some(f => f.endsWith('.md') || f.endsWith('.mdx'))
   
+  // i18n detection
+  const has_i18n = !!(
+    deps['next-intl'] || 
+    deps['react-i18next'] || 
+    deps['i18n'] ||
+    deps['next-i18next'] ||
+    folders.some(f => f.includes('locale') || f.includes('i18n') || f.includes('lang') || f.includes('translations')) ||
+    files.some(f => f.includes('locale') || f.includes('i18n') || f.includes('lang'))
+  )
+  
   // SEO detection
   const has_seo_files = signals.seoHeavy || files.some(f => f.includes('sitemap') || f.includes('robots'))
   const has_head_metadata = !!(files.some(f => {
@@ -261,6 +272,7 @@ export function buildEvidenceGraph(
     has_blog_structure,
     has_content_folder,
     has_markdown_files,
+    has_i18n,
     has_seo_files,
     has_head_metadata,
     has_open_graph,

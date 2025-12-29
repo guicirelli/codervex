@@ -55,10 +55,25 @@ export function generateProposal(
       core_value_proposition = `Present information through a ${ruleResult.statefulness} architecture designed for clarity and accessibility.`
     }
   } else if (intent === 'PRESENT') {
-    if (evidence.has_products && !evidence.has_checkout) {
+    if (blueprint.name === 'PortfolioBlueprint') {
+      // Portfolio-specific: Focus on what it says about the developer
+      target_audience = 'developers' // Recruiters, hiring managers, technical reviewers
+      technical_level = evidence.has_nextjs && evidence.has_typescript ? 'high' : 
+                       evidence.has_react ? 'medium' : 'low'
+      
+      const stackSignals: string[] = []
+      if (evidence.has_nextjs) stackSignals.push('Next.js')
+      if (evidence.has_typescript) stackSignals.push('TypeScript')
+      if (evidence.has_react) stackSignals.push('React')
+      if (evidence.has_tailwind) stackSignals.push('Tailwind CSS')
+      
+      const stackInfo = stackSignals.length > 0 
+        ? ` using ${stackSignals.join(', ')}`
+        : ''
+      
+      core_value_proposition = `Position the developer as a competent ${evidence.has_nextjs ? 'frontend' : 'web'} professional through clear presentation of projects, code structure${stackInfo}, modern tooling and content clarity.`
+    } else if (evidence.has_products && !evidence.has_checkout) {
       core_value_proposition = `Showcase products and services through a ${ruleResult.statefulness} presentation layer focused on visual appeal and information clarity.`
-    } else if (blueprint.name === 'PortfolioBlueprint') {
-      core_value_proposition = `Display professional work and capabilities through a ${ruleResult.statefulness} portfolio optimized for credibility and engagement.`
     } else {
       core_value_proposition = `Present value proposition through a ${ruleResult.statefulness} interface designed for immediate comprehension and engagement.`
     }
