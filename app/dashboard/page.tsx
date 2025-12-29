@@ -2,13 +2,13 @@
 
 import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/shared/layout/Navbar'
 import Footer from '@/components/shared/layout/Footer'
 import LoginModal from '@/components/shared/ui/LoginModal'
 import toast from 'react-hot-toast'
-import { Plus, Upload, Wand2, X, Loader2, Github, Copy, Download, Hand, FileText } from 'lucide-react'
+import { Plus, Upload, Wand2, X, Loader2, Github, Copy, Download, Hand, FileText, Clock, ExternalLink } from 'lucide-react'
 
 
 export default function DashboardPage() {
@@ -25,7 +25,34 @@ export default function DashboardPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [linkError, setLinkError] = useState<string>('')
   const [analysisResult, setAnalysisResult] = useState<{ markdown: string; promptId: string; source: string; type: 'repository' | 'file'; fileCount?: number } | null>(null)
+  const [history, setHistory] = useState<Array<{ id: string; title: string; createdAt: string; projectType?: string; stack?: string }>>([])
+  const [loadingHistory, setLoadingHistory] = useState(false)
 
+
+  // Carregar histórico de análises
+  const loadHistory = async () => {
+    if (!user) return
+    
+    setLoadingHistory(true)
+    try {
+      const response = await fetch('/api/prompt/history')
+      if (response.ok) {
+        const data = await response.json()
+        setHistory(data.prompts || [])
+      }
+    } catch (error) {
+      console.error('Error loading history:', error)
+    } finally {
+      setLoadingHistory(false)
+    }
+  }
+
+  // Carregar histórico quando usuário estiver logado
+  useEffect(() => {
+    if (user && isLoaded) {
+      loadHistory()
+    }
+  }, [user, isLoaded])
 
   const validateGitHubLink = (url: string): boolean => {
     if (!url.trim()) return false
@@ -186,6 +213,11 @@ export default function DashboardPage() {
       setFiles([])
       setCustomInstructions('')
       setEnableCustomization(false)
+      
+      // Recarregar histórico após nova análise
+      if (user) {
+        loadHistory()
+      }
       
       // Atualizar a página para mostrar o resultado
       setTimeout(() => {
@@ -478,6 +510,68 @@ export default function DashboardPage() {
                   </button>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Latest Analyses - Histórico */}
+          {user && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 shadow-lg p-8 mt-10">
+              <div className="flex items-center gap-2 mb-6">
+                <Clock className="w-5 h-5 text-primary-500" />
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Latest Analyses</h2>
+              </div>
+              
+              {loadingHistory ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+                  <span className="ml-2 text-gray-600 dark:text-gray-400">Loading history...</span>
+                </div>
+              ) : history.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 dark:text-gray-400">No analyses yet. Create your first one above!</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {history.slice(0, 10).map((prompt, index) => (
+                    <Link
+                      key={prompt.id}
+                      href={`/dashboard/result/${prompt.id}`}
+                      className="block p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+                              #{history.length - index}
+                            </span>
+                            <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate">
+                              {prompt.title || 'Untitled Analysis'}
+                            </h3>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                            {prompt.projectType && (
+                              <span className="capitalize">{prompt.projectType}</span>
+                            )}
+                            {prompt.stack && (
+                              <span className="truncate">{prompt.stack}</span>
+                            )}
+                            <span>
+                              {new Date(prompt.createdAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                        <ExternalLink className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
