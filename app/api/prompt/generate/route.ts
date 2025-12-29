@@ -176,7 +176,20 @@ export async function POST(request: NextRequest) {
             canonical: analysis.canonical
           })
         } catch (error: any) {
-          logger.error('Error analyzing GitHub repo', { error: error.message, userId })
+          logger.error('Error analyzing GitHub repo', { error: error.message, userId, stack: error.stack })
+          
+          // Mensagem mais específica para erro de tmp
+          if (error.message?.includes('ENOENT') || error.message?.includes('tmp') || error.message?.includes('mkdir')) {
+            logger.error('Temporary directory error - server configuration issue', { error: error.message })
+            return NextResponse.json(
+              { 
+                error: 'Server configuration error. Please contact support or try again.',
+                code: 'SERVER_CONFIG_ERROR'
+              },
+              { status: 500 }
+            )
+          }
+          
           return NextResponse.json(
             { 
               error: error.message || 'Error analyzing GitHub repository. Please check if the repository is public and accessible.',
@@ -261,7 +274,20 @@ export async function POST(request: NextRequest) {
             canonical: analysis.canonical
           })
         } catch (error: any) {
-          logger.error('Error analyzing upload', { error: error.message, userId })
+          logger.error('Error analyzing upload', { error: error.message, userId, stack: error.stack })
+          
+          // Mensagem mais específica para erro de tmp
+          if (error.message?.includes('ENOENT') || error.message?.includes('tmp') || error.message?.includes('mkdir')) {
+            logger.error('Temporary directory error - server configuration issue', { error: error.message })
+            return NextResponse.json(
+              { 
+                error: 'Server configuration error. Please contact support or try again.',
+                code: 'SERVER_CONFIG_ERROR'
+              },
+              { status: 500 }
+            )
+          }
+          
           return NextResponse.json(
             { 
               error: error.message || 'Error analyzing uploaded files. Please check if the ZIP file is valid.',

@@ -210,9 +210,24 @@ export async function GET(request: NextRequest) {
 
   } catch (error: any) {
     console.error('Erro ao buscar identidade:', error)
+    
+    // Melhorar mensagens de erro
+    let errorMessage = 'Error fetching user identity'
+    let statusCode = 500
+    
+    if (error.message?.includes('prisma') || error.message?.includes('database') || error.code === 'P1001') {
+      errorMessage = 'Database connection error. Please try again later.'
+      statusCode = 503
+    } else if (error.message?.includes('clerk') || error.message?.includes('authentication')) {
+      errorMessage = 'Authentication service error. Please try signing in again.'
+      statusCode = 503
+    } else if (error.message) {
+      errorMessage = error.message
+    }
+    
     return NextResponse.json(
-      { error: 'Erro ao buscar identidade' },
-      { status: 500 }
+      { error: errorMessage },
+      { status: statusCode }
     )
   }
 }

@@ -99,10 +99,51 @@ export async function GET(request: NextRequest) {
           ].filter(Boolean).length,
           canRemove: false, // Não pode remover se só tem 1 método
         })
-      } catch (createError) {
+      } catch (createError: any) {
         console.error('Erro ao criar usuário:', createError)
+        
+        // Se for erro de constraint única, tentar buscar o usuário existente
+        if (createError.code === 'P2002') {
+          try {
+            const existingUser = await prisma.user.findFirst({
+              where: {
+                OR: [
+                  { clerkId: userId },
+                  { email: email.toLowerCase().trim() },
+                ],
+              },
+              select: {
+                id: true,
+                email: true,
+                hasPassword: true,
+                hasGoogle: true,
+                hasGithub: true,
+                clerkId: true,
+              },
+            })
+            
+            if (existingUser) {
+              return NextResponse.json({
+                providers: {
+                  email: existingUser.hasPassword,
+                  google: existingUser.hasGoogle,
+                  github: existingUser.hasGithub,
+                },
+                activeMethods: [
+                  existingUser.hasPassword,
+                  existingUser.hasGoogle,
+                  existingUser.hasGithub,
+                ].filter(Boolean).length,
+                canRemove: false,
+              })
+            }
+          } catch (lookupError) {
+            console.error('Error looking up existing user:', lookupError)
+          }
+        }
+        
         return NextResponse.json(
-          { error: 'Erro ao buscar métodos de login' },
+          { error: 'Error fetching authentication methods. Please try again.' },
           { status: 500 }
         )
       }
@@ -167,9 +208,24 @@ export async function GET(request: NextRequest) {
 
   } catch (error: any) {
     console.error('Erro ao buscar providers:', error)
+    
+    // Melhorar mensagens de erro
+    let errorMessage = 'Error fetching authentication providers'
+    let statusCode = 500
+    
+    if (error.message?.includes('prisma') || error.message?.includes('database') || error.code === 'P1001') {
+      errorMessage = 'Database connection error. Please try again later.'
+      statusCode = 503
+    } else if (error.message?.includes('clerk') || error.message?.includes('authentication')) {
+      errorMessage = 'Authentication service error. Please try signing in again.'
+      statusCode = 503
+    } else if (error.message) {
+      errorMessage = error.message
+    }
+    
     return NextResponse.json(
-      { error: 'Erro ao buscar métodos de login' },
-      { status: 500 }
+      { error: errorMessage },
+      { status: statusCode }
     )
   }
 }
