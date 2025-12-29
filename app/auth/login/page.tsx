@@ -121,13 +121,16 @@ export default function LoginPage() {
       
       // Tratar diferentes tipos de erro
       let errorMessage = 'Error signing in. Please check your credentials.'
+      let isUserNotFound = false
       
       if (err.errors && err.errors.length > 0) {
         const clerkError = err.errors[0]
         
         // Erros específicos do Clerk
         if (clerkError.code === 'form_identifier_not_found') {
-          errorMessage = 'Invalid email or password. Please check your credentials and try again.'
+          // Usuário não encontrado - mostrar aviso amigável
+          isUserNotFound = true
+          errorMessage = 'No account found with this email. Please sign up first to create your account.'
         } else if (clerkError.code === 'form_password_incorrect') {
           errorMessage = 'Invalid email or password. Please check your credentials and try again.'
         } else if (clerkError.message) {
@@ -141,11 +144,25 @@ export default function LoginPage() {
         const remaining = err.remaining || 0
         setRateLimitInfo({ remaining, resetAt })
         errorMessage = `Too many attempts. Please try again in ${Math.ceil((resetAt - Date.now()) / 60000)} minutes.`
+        isUserNotFound = false
       }
 
-      toast.error(errorMessage)
+      // Mostrar aviso amigável se usuário não encontrado, erro caso contrário
+      if (isUserNotFound) {
+        toast(errorMessage, {
+          icon: 'ℹ️',
+          duration: 5000,
+          style: {
+            background: '#1e40af',
+            color: '#fff',
+          },
+        })
+      } else {
+        toast.error(errorMessage)
+      }
+      
       setErrors({
-        email: errorMessage.toLowerCase().includes('email') ? errorMessage : undefined,
+        email: errorMessage.toLowerCase().includes('email') || isUserNotFound ? errorMessage : undefined,
         password: errorMessage.toLowerCase().includes('password') || errorMessage.toLowerCase().includes('credentials') ? errorMessage : undefined,
       })
     } finally {
@@ -189,8 +206,20 @@ export default function LoginPage() {
         
         if (err?.errors?.[0]?.message) {
           const clerkError = err.errors[0].message.toLowerCase()
-          if (clerkError.includes('not found') || clerkError.includes('does not exist')) {
-            errorMsg = `No account found with this ${provider === 'oauth_google' ? 'Google' : 'GitHub'}. Please sign up first.`
+          const isUserNotFound = clerkError.includes('not found') || clerkError.includes('does not exist')
+          
+          if (isUserNotFound) {
+            errorMsg = `No account found with this ${provider === 'oauth_google' ? 'Google' : 'GitHub'} account. Please sign up first to create your account.`
+            // Mostrar aviso amigável ao invés de erro
+            toast(errorMsg, {
+              icon: 'ℹ️',
+              duration: 5000,
+              style: {
+                background: '#1e40af',
+                color: '#fff',
+              },
+            })
+            return // Não continuar com toast.error
           } else if (clerkError.includes('already exists') || clerkError.includes('already registered')) {
             errorMsg = `This ${provider === 'oauth_google' ? 'Google' : 'GitHub'} account is already registered. Please sign in.`
           } else {
