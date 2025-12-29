@@ -123,48 +123,71 @@ export default function LoginPage() {
       let errorMessage = 'Error signing in. Please check your credentials.'
       let isUserNotFound = false
       
+      // Verificar se é erro de rate limit primeiro
+      if (err.status === 429 || err.statusCode === 429) {
+        const resetAt = err.resetAt || Date.now() + 15 * 60 * 1000
+        const remaining = err.remaining || 0
+        setRateLimitInfo({ remaining, resetAt })
+        errorMessage = `Too many attempts. Please try again in ${Math.ceil((resetAt - Date.now()) / 60000)} minutes.`
+        toast.error(errorMessage)
+        setErrors({})
+        setLoading(false)
+        return
+      }
+      
       if (err.errors && err.errors.length > 0) {
         const clerkError = err.errors[0]
         
         // Erros específicos do Clerk
-        if (clerkError.code === 'form_identifier_not_found') {
+        if (clerkError.code === 'form_identifier_not_found' || 
+            clerkError.code === 'form_identifier_invalid' ||
+            (clerkError.message && (clerkError.message.toLowerCase().includes('not found') || 
+                                    clerkError.message.toLowerCase().includes('does not exist')))) {
           // Usuário não encontrado - mostrar aviso amigável
           isUserNotFound = true
           errorMessage = 'No account found with this email address. You need to sign up first to create an account. Click "Sign Up" to register.'
         } else if (clerkError.code === 'form_password_incorrect') {
           errorMessage = 'Invalid email or password. Please check your credentials and try again.'
         } else if (clerkError.message) {
-          errorMessage = clerkError.message
+          // Verificar se a mensagem indica usuário não encontrado
+          const msgLower = clerkError.message.toLowerCase()
+          if (msgLower.includes('not found') || msgLower.includes('does not exist') || msgLower.includes('no account')) {
+            isUserNotFound = true
+            errorMessage = 'No account found with this email address. You need to sign up first to create an account. Click "Sign Up" to register.'
+          } else {
+            errorMessage = clerkError.message
+          }
         }
-      }
-
-      // Verificar se é erro de rate limit
-      if (err.status === 429 || err.statusCode === 429) {
-        const resetAt = err.resetAt || Date.now() + 15 * 60 * 1000
-        const remaining = err.remaining || 0
-        setRateLimitInfo({ remaining, resetAt })
-        errorMessage = `Too many attempts. Please try again in ${Math.ceil((resetAt - Date.now()) / 60000)} minutes.`
-        isUserNotFound = false
+      } else if (err.message) {
+        // Verificar se a mensagem do erro indica usuário não encontrado
+        const msgLower = err.message.toLowerCase()
+        if (msgLower.includes('not found') || msgLower.includes('does not exist') || msgLower.includes('no account')) {
+          isUserNotFound = true
+          errorMessage = 'No account found with this email address. You need to sign up first to create an account. Click "Sign Up" to register.'
+        } else {
+          errorMessage = err.message
+        }
       }
 
       // Mostrar aviso amigável se usuário não encontrado, erro caso contrário
       if (isUserNotFound) {
         toast(errorMessage, {
           icon: 'ℹ️',
-          duration: 5000,
+          duration: 6000,
           style: {
             background: '#1e40af',
             color: '#fff',
           },
         })
+        // Não mostrar erro no campo, apenas o toast informativo
+        setErrors({})
       } else {
         toast.error(errorMessage)
+        setErrors({
+          email: errorMessage.toLowerCase().includes('email') ? errorMessage : undefined,
+          password: errorMessage.toLowerCase().includes('password') || errorMessage.toLowerCase().includes('credentials') ? errorMessage : undefined,
+        })
       }
-      
-      setErrors({
-        email: errorMessage.toLowerCase().includes('email') || isUserNotFound ? errorMessage : undefined,
-        password: errorMessage.toLowerCase().includes('password') || errorMessage.toLowerCase().includes('credentials') ? errorMessage : undefined,
-      })
     } finally {
       setLoading(false)
     }
@@ -202,11 +225,14 @@ export default function LoginPage() {
         console.error('OAuth error:', err)
         setOauthLoading(null)
         
-        let errorMsg = 'Erro ao conectar com ' + (provider === 'oauth_google' ? 'Google' : 'GitHub')
+        let errorMsg = `Error connecting with ${provider === 'oauth_google' ? 'Google' : 'GitHub'}`
+        let isUserNotFound = false
+        let isAlreadyRegistered = false
         
         if (err?.errors?.[0]?.message) {
           const clerkError = err.errors[0].message.toLowerCase()
-          const isUserNotFound = clerkError.includes('not found') || clerkError.includes('does not exist')
+          isUserNotFound = clerkError.includes('not found') || clerkError.includes('does not exist')
+          isAlreadyRegistered = clerkError.includes('already exists') || clerkError.includes('already registered')
           
           if (isUserNotFound) {
             errorMsg = `No account found with this ${provider === 'oauth_google' ? 'Google' : 'GitHub'} account. You need to sign up first to create an account. Click "Sign Up" to register.`
@@ -220,7 +246,7 @@ export default function LoginPage() {
               },
             })
             return // Não continuar com toast.error
-          } else if (clerkError.includes('already exists') || clerkError.includes('already registered')) {
+          } else if (isAlreadyRegistered) {
             errorMsg = `This ${provider === 'oauth_google' ? 'Google' : 'GitHub'} account is already registered. Please sign in instead.`
             toast(errorMsg, {
               icon: 'ℹ️',
@@ -238,7 +264,10 @@ export default function LoginPage() {
           errorMsg = err.message
         }
         
-        toast.error(errorMsg)
+        // Só mostrar erro se não for usuário não encontrado ou já registrado
+        if (!isUserNotFound && !isAlreadyRegistered) {
+          toast.error(errorMsg)
+        }
       })
       
     } catch (err: any) {
