@@ -525,8 +525,8 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Latest Analyses - Histórico */}
-          {user && (
+          {/* Latest Analyses - Histórico (only show on dashboard input mode, not when the prompt result is visible) */}
+          {user && !analysisResult && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 shadow-lg p-8 mt-10">
               <div className="flex items-center gap-2 mb-6">
                 <Clock className="w-5 h-5 text-primary-500" />
