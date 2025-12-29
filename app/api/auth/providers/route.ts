@@ -105,11 +105,17 @@ export async function GET(request: NextRequest) {
         // Se for erro de constraint única, tentar buscar o usuário existente
         if (createError.code === 'P2002') {
           try {
+            // Buscar email do Clerk novamente para usar no where
+            const { clerkClient } = await import('@clerk/nextjs/server')
+            const clerkClientInstance = await clerkClient()
+            const clerkUser = await clerkClientInstance.users.getUser(userId)
+            const email = clerkUser.emailAddresses?.[0]?.emailAddress
+            
             const existingUser = await prisma.user.findFirst({
               where: {
                 OR: [
                   { clerkId: userId },
-                  { email: email.toLowerCase().trim() },
+                  ...(email ? [{ email: email.toLowerCase().trim() }] : []),
                 ],
               },
               select: {

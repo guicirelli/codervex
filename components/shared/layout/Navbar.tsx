@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { cn } from '@/lib/utils/common'
@@ -17,14 +17,9 @@ export default function Navbar() {
     email: string
   } | null>(null)
 
-  // Carregar identidade do usuário
-  useEffect(() => {
-    if (user && isLoaded) {
-      loadIdentity()
-    }
-  }, [user, isLoaded])
-
-  const loadIdentity = async () => {
+  const loadIdentity = useCallback(async () => {
+    if (!user) return
+    
     try {
       const response = await fetch('/api/user/identity')
       if (response.ok) {
@@ -54,7 +49,14 @@ export default function Navbar() {
         email: user?.emailAddresses[0]?.emailAddress || '',
       })
     }
-  }
+  }, [user])
+
+  // Carregar identidade do usuário
+  useEffect(() => {
+    if (user && isLoaded) {
+      loadIdentity()
+    }
+  }, [user, isLoaded, loadIdentity])
 
   return (
     <nav
