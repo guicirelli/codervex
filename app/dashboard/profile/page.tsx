@@ -4,20 +4,16 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/shared/layout/Navbar'
 import Footer from '@/components/shared/layout/Footer'
-import { User, Save, AtSign, Mail, Calendar, MapPin, CheckCircle2, AlertCircle, Plus, X, Github } from 'lucide-react'
+import { User, Save, Mail, CheckCircle2, AlertCircle, Plus, X, Github } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
 import { useSignIn, useUser } from '@clerk/nextjs'
-import { validateUsernameFormat, normalizeUsername } from '@/lib/utils/username-validation'
 
 interface Identity {
-  username?: string | null
   displayName?: string | null
   avatar?: string | null
   email: string
   status: string
-  dataNascimento?: string | null
-  localizacao?: string | null
   hasGoogle?: boolean
   hasGithub?: boolean
   hasPassword?: boolean
@@ -34,7 +30,6 @@ export default function ProfilePage() {
   const { signIn, isLoaded: clerkLoaded } = useSignIn()
   const { user: clerkUser, isLoaded: userLoaded } = useUser()
   const [loading, setLoading] = useState(false)
-  const [checkingUsername, setCheckingUsername] = useState(false)
   const [identity, setIdentity] = useState<Identity | null>(null)
   const [providers, setProviders] = useState<Providers>({
     email: false,
@@ -44,15 +39,9 @@ export default function ProfilePage() {
   const [canRemove, setCanRemove] = useState(false)
   
   const [formData, setFormData] = useState({
-    username: '',
     displayName: '',
     avatar: '',
-    dataNascimento: '',
-    localizacao: '',
   })
-
-  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
-  const [usernameError, setUsernameError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!userLoaded) {
@@ -85,13 +74,8 @@ export default function ProfilePage() {
         const data = await response.json()
         setIdentity(data.identity)
         setFormData({
-          username: data.identity.username || '',
           displayName: data.identity.displayName || '',
           avatar: data.identity.avatar || '',
-          dataNascimento: data.identity.dataNascimento 
-            ? new Date(data.identity.dataNascimento).toISOString().split('T')[0]
-            : '',
-          localizacao: data.identity.localizacao || '',
         })
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
@@ -101,13 +85,10 @@ export default function ProfilePage() {
           // Se não conseguir carregar, criar identidade básica do Clerk
           if (clerkUser) {
             setIdentity({
-              username: null,
               displayName: clerkUser.firstName || null,
               avatar: clerkUser.imageUrl || null,
               email: clerkUser.emailAddresses[0]?.emailAddress || '',
               status: 'active',
-              dataNascimento: null,
-              localizacao: null,
             })
             toast.error(errorData.error || 'Error loading profile. Using basic information.')
           } else {
@@ -120,13 +101,10 @@ export default function ProfilePage() {
       // Se houver erro de rede, usar dados básicos do Clerk
       if (clerkUser) {
         setIdentity({
-          username: null,
           displayName: clerkUser.firstName || null,
           avatar: clerkUser.imageUrl || null,
           email: clerkUser.emailAddresses[0]?.emailAddress || '',
           status: 'active',
-          dataNascimento: null,
-          localizacao: null,
         })
         toast.error('Network error. Using basic information.')
       } else {
@@ -150,105 +128,14 @@ export default function ProfilePage() {
     }
   }
 
-  const checkUsername = async (username: string) => {
-    if (!username || username.trim().length === 0) {
-      setUsernameAvailable(null)
-      setUsernameError(null)
-      return
-    }
-
-    const validation = validateUsernameFormat(username)
-    if (!validation.valid) {
-      setUsernameAvailable(false)
-        setUsernameError(validation.error || 'Invalid username')
-      return
-    }
-
-    setCheckingUsername(true)
-    setUsernameError(null)
-
-    try {
-      const response = await fetch('/api/user/identity/check-username', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setUsernameAvailable(data.available)
-        if (!data.available) {
-          setUsernameError('This username is already in use')
-        }
-      } else {
-        setUsernameAvailable(false)
-        setUsernameError(data.error || 'Error checking username')
-      }
-    } catch (error) {
-      setUsernameAvailable(false)
-        setUsernameError('Error checking availability')
-    } finally {
-      setCheckingUsername(false)
-    }
-  }
-
-  const handleUsernameChange = (value: string) => {
-    // Bloquear caracteres inválidos em tempo real
-    // Apenas letras (maiúsculas/minúsculas) e números
-    const filteredValue = value.replace(/[^a-zA-Z0-9]/g, '')
-    
-    // Limitar comprimento
-    const limitedValue = filteredValue.slice(0, 30)
-    
-    // Validar formato primeiro em tempo real
-    const validation = validateUsernameFormat(limitedValue)
-    if (!validation.valid) {
-      setUsernameAvailable(false)
-      setUsernameError(validation.error || 'Invalid username')
-      setFormData(prev => ({ ...prev, username: limitedValue }))
-      return
-    }
-    
-    // Limpar erro se válido
-    setUsernameError(null)
-    
-    const normalized = normalizeUsername(limitedValue)
-    setFormData(prev => ({ ...prev, username: normalized }))
-    
-    // Verificar disponibilidade apenas se mudou e formato é válido
-    if (normalized !== identity?.username) {
-      checkUsername(normalized)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
-      // Validar username se foi alterado
-      if (formData.username !== identity?.username) {
-        const validation = validateUsernameFormat(formData.username)
-        if (!validation.valid) {
-          toast.error(validation.error || 'Invalid username')
-          setLoading(false)
-          return
-        }
-
-        if (usernameAvailable === false) {
-          toast.error('This username is already in use')
-          setLoading(false)
-          return
-        }
-      }
-
       const updateData: any = {
-        username: formData.username || null,
         displayName: formData.displayName || null,
         avatar: formData.avatar || null,
-        dataNascimento: formData.dataNascimento ? new Date(formData.dataNascimento) : null,
-        localizacao: formData.localizacao || null,
       }
 
       const response = await fetch('/api/user/profile', {
@@ -353,7 +240,7 @@ export default function ProfilePage() {
           <div className="bg-gray-900/90 backdrop-blur-sm border border-gray-800 rounded-xl shadow-2xl p-8 mb-6">
             <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
               <User className="w-5 h-5" />
-              Personal Information
+              Profile
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -384,57 +271,15 @@ export default function ProfilePage() {
                       placeholder="https://example.com/avatar.jpg"
                       className="w-full px-4 py-2 border-2 border-gray-700 bg-gray-800 text-white rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Avatar image URL</p>
+                    <p className="text-xs text-gray-500 mt-1">Optional: Image URL</p>
                   </div>
                 </div>
-              </div>
-
-              {/* Username */}
-              <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                  <AtSign className="w-4 h-4" />
-                  Username
-                </label>
-                <div className="relative">
-                  <input
-                    id="username"
-                    type="text"
-                    value={formData.username}
-                    onChange={(e) => handleUsernameChange(e.target.value)}
-                    className={`w-full px-4 py-2 border-2 ${
-                      usernameError
-                        ? 'border-red-500 bg-red-500/10'
-                        : usernameAvailable === true
-                        ? 'border-green-500 bg-green-500/10'
-                        : 'border-gray-700 bg-gray-800'
-                    } text-white rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all`}
-                    placeholder="YourUsername"
-                  />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    {checkingUsername ? (
-                      <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                    ) : usernameAvailable === true ? (
-                      <CheckCircle2 className="w-5 h-5 text-green-500" />
-                    ) : usernameError ? (
-                      <AlertCircle className="w-5 h-5 text-red-500" />
-                    ) : null}
-                  </div>
-                </div>
-                {usernameError && (
-                  <p className="mt-1 text-sm text-red-400">{usernameError}</p>
-                )}
-                {usernameAvailable === true && (
-                  <p className="mt-1 text-sm text-green-400">Username available!</p>
-                )}
-                <p className="text-xs text-gray-500 mt-1">
-                  Your username appears as @{formData.username || 'username'} on Codervex
-                </p>
               </div>
 
               {/* Display Name */}
               <div>
                 <label htmlFor="displayName" className="block text-sm font-medium text-gray-300 mb-2">
-                  Display Name
+                  Name
                 </label>
                 <input
                   id="displayName"
@@ -444,39 +289,6 @@ export default function ProfilePage() {
                   maxLength={100}
                   className="w-full px-4 py-2 border-2 border-gray-700 bg-gray-800 text-white rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
                   placeholder="Your name"
-                />
-              </div>
-
-              {/* Data de Nascimento */}
-              <div>
-                <label htmlFor="dataNascimento" className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Date of Birth
-                </label>
-                <input
-                  id="dataNascimento"
-                  type="date"
-                  value={formData.dataNascimento}
-                  onChange={(e) => setFormData(prev => ({ ...prev, dataNascimento: e.target.value }))}
-                  max={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-2 border-2 border-gray-700 bg-gray-800 text-white rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
-                />
-              </div>
-
-              {/* Localização */}
-              <div>
-                <label htmlFor="localizacao" className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  Location
-                </label>
-                <input
-                  id="localizacao"
-                  type="text"
-                  value={formData.localizacao}
-                  onChange={(e) => setFormData(prev => ({ ...prev, localizacao: e.target.value }))}
-                  maxLength={100}
-                  className="w-full px-4 py-2 border-2 border-gray-700 bg-gray-800 text-white rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
-                  placeholder="City, Country"
                 />
               </div>
 
@@ -493,11 +305,12 @@ export default function ProfilePage() {
                   disabled
                   className="w-full px-4 py-2 border-2 border-gray-700 bg-gray-800/50 text-gray-400 rounded-lg cursor-not-allowed"
                 />
+                <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
               </div>
 
               <button
                 type="submit"
-                disabled={loading || checkingUsername || (usernameAvailable === false && formData.username !== identity.username)}
+                disabled={loading}
                 className="w-full bg-primary-500 hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-all inline-flex items-center justify-center gap-2"
               >
                 <Save className="w-5 h-5" />
@@ -508,10 +321,7 @@ export default function ProfilePage() {
 
           {/* Métodos de Login Vinculados */}
           <div className="bg-gray-900/90 backdrop-blur-sm border border-gray-800 rounded-xl shadow-2xl p-8">
-            <h2 className="text-xl font-semibold text-white mb-4">Login Methods</h2>
-            <p className="text-sm text-gray-400 mb-6">
-              Link multiple methods to make accessing your account easier
-            </p>
+            <h2 className="text-xl font-semibold text-white mb-6">Login Methods</h2>
 
             <div className="space-y-4">
               {/* Email e Senha */}
