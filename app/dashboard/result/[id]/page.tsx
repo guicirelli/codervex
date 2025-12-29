@@ -37,14 +37,18 @@ export default function ResultPage() {
   })
 
   useEffect(() => {
-    if (isLoaded && !user) {
+    // Não esperar isLoaded - verificar user diretamente
+    if (user === null && isLoaded) {
       router.push('/auth/login')
     }
-  }, [isLoaded, user, router])
+  }, [user, isLoaded, router])
 
   useEffect(() => {
+    // Buscar imediatamente se user existe
     if (params.id && user) {
       fetchResult()
+    } else if (!user && !loading) {
+      setLoading(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id, user])
@@ -102,18 +106,18 @@ ${basePrompt}`
     toast.success('Custom prompt generated!')
   }
 
-  if (!isLoaded || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
-        <div className="text-center space-y-4">
-          <Loader2 className="w-12 h-12 animate-spin text-primary-600 mx-auto" />
-          <p className="text-gray-600 dark:text-gray-400">Loading result...</p>
-        </div>
-      </div>
-    )
-  }
-
+  // Não mostrar loading - renderizar imediatamente
   if (!user || !result) {
+    // Se ainda está carregando, mostrar estrutura vazia
+    if (loading) {
+      return (
+        <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
+          <Navbar />
+          <div className="flex-1"></div>
+          <Footer />
+        </div>
+      )
+    }
     return null
   }
 

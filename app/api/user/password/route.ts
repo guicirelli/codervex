@@ -49,6 +49,12 @@ export async function PUT(request: NextRequest) {
     }
 
     // Verificar senha atual
+    if (!user.password) {
+      return NextResponse.json(
+        { error: 'User does not have a password set. Please use OAuth login or set a password first.' },
+        { status: 400 }
+      )
+    }
     const isValidPassword = await verifyPassword(currentPassword, user.password)
     if (!isValidPassword) {
       return NextResponse.json(

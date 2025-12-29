@@ -41,3 +41,7 @@ next-env.d.ts
 # cache
 .cache
 *.cache
+
+# temporary files
+/tmp
+tmp/

@@ -1,23 +1,58 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { cn } from '@/lib/utils/common'
-import { LogIn, UserPlus, LogOut, User } from 'lucide-react'
-import { useUser, useClerk } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
+import { LogIn, UserPlus, HelpCircle } from 'lucide-react'
+import { useUser } from '@clerk/nextjs'
+import UserDropdown from '@/components/shared/ui/UserDropdown'
 
 export default function Navbar() {
   const { user, isLoaded } = useUser()
-  const { signOut } = useClerk()
-  const router = useRouter()
+  const [identity, setIdentity] = useState<{
+    username?: string | null
+    displayName?: string | null
+    avatar?: string | null
+    email: string
+  } | null>(null)
 
-  const handleSignOut = async () => {
+  // Carregar identidade do usuário
+  useEffect(() => {
+    if (user && isLoaded) {
+      loadIdentity()
+    }
+  }, [user, isLoaded])
+
+  const loadIdentity = async () => {
     try {
-      await signOut()
-      router.push('/')
+      const response = await fetch('/api/user/identity')
+      if (response.ok) {
+        const data = await response.json()
+        setIdentity({
+          username: data.identity?.username,
+          displayName: data.identity?.displayName,
+          avatar: data.identity?.avatar,
+          email: data.identity?.email || user?.emailAddresses[0]?.emailAddress || '',
+        })
+      } else {
+        // Fallback para dados do Clerk
+        setIdentity({
+          username: null,
+          displayName: user?.firstName || null,
+          avatar: user?.imageUrl || null,
+          email: user?.emailAddresses[0]?.emailAddress || '',
+        })
+      }
     } catch (error) {
-      console.error('Error signing out:', error)
+      console.error('Erro ao carregar identidade:', error)
+      // Fallback
+      setIdentity({
+        username: null,
+        displayName: user?.firstName || null,
+        avatar: user?.imageUrl || null,
+        email: user?.emailAddresses[0]?.emailAddress || '',
+      })
     }
   }
 
@@ -54,49 +89,23 @@ export default function Navbar() {
 
           {/* Right Side - User Menu or Login/Sign Up */}
           <div className="flex items-center gap-3 sm:gap-4 absolute right-0">
-            {!isLoaded ? (
-              // Loading state - mostrar nada ou um placeholder sutil
-              <div className="w-8 h-8 rounded-full bg-gray-800 animate-pulse"></div>
+            <Link
+              href="/why-codervex"
+              prefetch={true}
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-primary-400 hover:text-primary-300 hover:bg-primary-500/10 transition-all hover:scale-105 group border border-primary-500/30 hover:border-primary-500/50"
+            >
+              <span className="font-semibold text-sm">Why</span>
+              <HelpCircle className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+            </Link>
+            {user && identity ? (
+              <UserDropdown identity={identity} clerkUser={user} />
             ) : user ? (
-              <div className="flex items-center gap-3">
-                {/* User Info */}
-                <Link
-                  href="/dashboard"
-                  className="inline-flex items-center gap-2 px-3 py-2 text-white hover:text-gray-200 font-medium text-sm transition-colors rounded-lg hover:bg-gray-800/50"
-                  title={user.emailAddresses[0]?.emailAddress || 'Dashboard'}
-                >
-                  {user.imageUrl ? (
-                    <Image
-                      src={user.imageUrl}
-                      alt={user.firstName || 'User'}
-                      width={32}
-                      height={32}
-                      className="rounded-full border-2 border-primary-500/50"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center border-2 border-primary-400">
-                      <User className="w-4 h-4 text-white" />
-                    </div>
-                  )}
-                  <span className="hidden sm:inline text-white font-semibold">
-                    {user.firstName || user.emailAddresses[0]?.emailAddress?.split('@')[0] || 'User'}
-                  </span>
-                </Link>
-                
-                {/* Logout Button */}
-                <button
-                  onClick={handleSignOut}
-                  className="inline-flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-white font-medium text-sm transition-colors rounded-lg hover:bg-gray-800/50"
-                  title="Sign out"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span className="hidden sm:inline">Logout</span>
-                </button>
-              </div>
+              <div className="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center border-2 border-primary-400 animate-pulse"></div>
             ) : (
               <>
                 <Link
                   href="/auth/login"
+                  prefetch={true}
                   className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 text-gray-300 hover:text-white font-semibold text-sm sm:text-base transition-colors rounded-lg hover:bg-gray-800/50"
                 >
                   <LogIn className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -104,6 +113,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   href="/auth/register"
+                  prefetch={true}
                   className="inline-flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 bg-primary-500 text-white font-semibold text-sm sm:text-base rounded-lg hover:bg-primary-500 transition-all shadow-lg hover:shadow-xl"
                 >
                   <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />

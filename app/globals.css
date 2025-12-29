@@ -42,6 +42,10 @@
     animation: fadeIn 0.4s ease-out 0.3s both;
   }
   
+  .duration-600 {
+    transition-duration: 600ms;
+  }
+  
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -361,4 +365,30 @@ img[loading="lazy"] {
 .animate-scale-in {
   animation: scale-in 0.3s ease-out;
   will-change: opacity, transform;
+}
+
+/* Fix: Hide any unwanted red elements in the center of background images */
+#clerk-captcha,
+[data-clerk-element],
+.clerk-element,
+[class*="clerk"][class*="captcha"],
+iframe[src*="clerk"],
+iframe[src*="captcha"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+  pointer-events: none !important;
+}
+
+/* Fix: Hide any red debug indicators or elements that might appear in center */
+[style*="red"][style*="center"],
+[style*="rgb(255"][style*="center"],
+[class*="red"][class*="center"],
+[class*="red"][class*="absolute"][class*="center"],
+div[style*="position: fixed"][style*="red"],
+div[style*="position: absolute"][style*="red"] {
+  display: none !important;
+  visibility: hidden !important;
 }

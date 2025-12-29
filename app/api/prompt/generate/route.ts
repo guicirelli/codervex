@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/core/database'
 import { getTokenFromRequest, verifyToken } from '@/lib/core/auth'
 import { analyzeFiles, extractZipFiles } from '@/lib/services/file-analyzer.service'
@@ -6,37 +7,51 @@ import { generateSuperPrompt } from '@/lib/services/prompt-generator.service'
 import { rateLimit } from '@/lib/core/rate-limiter'
 import { logger } from '@/lib/core/logger'
 import { sendPromptReadyEmail } from '@/lib/services/email.service'
+import { runAnalysis } from '@/lib/services/project-analyzer'
 
 export async function POST(request: NextRequest) {
   try {
-    // Verificar autenticação
-    const token = getTokenFromRequest(request)
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Não autenticado' },
-        { status: 401 }
-      )
+    // Tentar obter do Clerk primeiro
+    let userId: string | null = null
+    
+    try {
+      const { userId: clerkUserId } = await auth()
+      if (clerkUserId) {
+        userId = clerkUserId
+      }
+    } catch {
+      // Se falhar, tentar pelo token JWT
     }
 
-    const payload = verifyToken(token)
-    if (!payload) {
+    // Se não tiver Clerk, usar token JWT
+    if (!userId) {
+      const token = getTokenFromRequest(request)
+      if (token) {
+        const payload = verifyToken(token)
+        if (payload) {
+          userId = payload.userId
+        }
+      }
+    }
+
+    if (!userId) {
       return NextResponse.json(
-        { error: 'Token inválido' },
+        { error: 'Not authenticated. Please sign in to continue.' },
         { status: 401 }
       )
     }
 
     // Rate limiting
-    const rateLimitResult = rateLimit(payload.userId, {
+    const rateLimitResult = rateLimit(userId, {
       windowMs: 60000, // 1 minuto
       maxRequests: 5, // 5 requisições por minuto
     })
 
     if (!rateLimitResult.allowed) {
-      logger.warn('Rate limit exceeded', { userId: payload.userId })
+      logger.warn('Rate limit exceeded', { userId })
       return NextResponse.json(
         {
-          error: 'Muitas requisições. Tente novamente em alguns instantes.',
+          error: 'Too many requests. Please try again in a few moments.',
           resetTime: rateLimitResult.resetTime,
         },
         {
@@ -49,67 +64,216 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-    })
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Usuário não encontrado' },
-        { status: 404 }
-      )
+    // Buscar usuário no banco (por clerkId ou id)
+    let user
+    try {
+      user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { clerkId: userId },
+            { id: userId },
+          ],
+        },
+      })
+    } catch (dbError: any) {
+      // Se houver erro de banco (ex: DATABASE_URL não configurado), continuar sem salvar
+      logger.warn('Database error, continuing without saving to history', { error: dbError.message })
+      user = null
     }
 
-    // Verificar créditos (permitir 1 prompt gratuito para novos usuários)
-    const isFirstPrompt = user.credits === 0 && user.subscription === 'free'
-    const hasCredits = user.subscription === 'monthly' || user.credits > 0
-    
-    if (!isFirstPrompt && !hasCredits) {
-      return NextResponse.json(
-        { 
-          error: 'Créditos insuficientes. Você tem direito a 1 prompt gratuito! Use-o agora ou adquira um plano.',
-          code: 'INSUFFICIENT_CREDITS'
-        },
-        { status: 403 }
-      )
+    // Se não encontrar usuário, ainda permitir análise mas não salvar no histórico
+    if (!user) {
+      logger.warn('User not found in database, continuing without saving to history', { userId })
+    }
+
+    // Verificar créditos (permitir 1 prompt gratuito para novos usuários) - apenas se usuário existir
+    if (user) {
+      const isFirstPrompt = user.credits === 0 && user.subscription === 'free'
+      const hasCredits = user.subscription === 'monthly' || user.credits > 0
+      
+      if (!isFirstPrompt && !hasCredits) {
+        return NextResponse.json(
+          { 
+            error: 'Insufficient credits. You have 1 free prompt available! Use it now or upgrade your plan.',
+            code: 'INSUFFICIENT_CREDITS'
+          },
+          { status: 403 }
+        )
+      }
     }
 
     const formData = await request.formData()
     const files = formData.getAll('files') as File[]
     const githubUrl = formData.get('githubUrl') as string | null
+    const links = formData.get('links') as string | null
 
+    // Processar GitHub Repo (prioridade)
+    if (githubUrl || links) {
+      const repoUrl = githubUrl || links
+      if (repoUrl) {
+        try {
+          logger.info('Analyzing GitHub repository', { url: repoUrl, userId })
+          
+          const analysis = await runAnalysis({
+            type: 'github',
+            value: repoUrl
+          })
+
+          // Salvar prompt no histórico (se usuário existir)
+          let savedPromptId = `temp-${Date.now()}`
+          if (user) {
+            try {
+              const savedPrompt = await prisma.prompt.create({
+                data: {
+                  userId: user.id,
+                  title: `GitHub Project - ${new Date().toLocaleDateString('en-US')}`,
+                  content: analysis.markdown,
+                  projectType: analysis.analysis.projectType,
+                  stack: analysis.analysis.stack,
+                },
+              })
+              savedPromptId = savedPrompt.id
+              logger.info('GitHub analysis completed', { promptId: savedPrompt.id, userId })
+
+              // Enviar email de notificação (assíncrono)
+              sendPromptReadyEmail(user.email, `GitHub Project - ${new Date().toLocaleDateString('en-US')}`, savedPrompt.id).catch(
+                (error) => logger.error('Error sending email', { error })
+              )
+
+              // Deduzir crédito se não for assinatura mensal e não for o primeiro prompt gratuito
+              try {
+                if (user.subscription !== 'monthly') {
+                  const isFirstPrompt = user.credits === 0 && user.subscription === 'free'
+                  if (isFirstPrompt) {
+                    logger.info('First free prompt used', { userId: user.id })
+                  } else {
+                    await prisma.user.update({
+                      where: { id: user.id },
+                      data: {
+                        credits: {
+                          decrement: 1,
+                        },
+                      },
+                    })
+                  }
+                }
+              } catch (creditError: any) {
+                logger.warn('Error updating credits', { error: creditError.message })
+              }
+            } catch (saveError: any) {
+              logger.warn('Error saving prompt to database, continuing with temp ID', { error: saveError.message })
+            }
+          }
+
+          return NextResponse.json({
+            prompt: analysis.markdown,
+            promptId: savedPromptId,
+            analysis: {
+              stack: analysis.analysis.stack,
+              framework: analysis.analysis.framework,
+              projectType: analysis.analysis.projectType
+            },
+            canonical: analysis.canonical
+          })
+        } catch (error: any) {
+          logger.error('Error analyzing GitHub repo', { error: error.message, userId })
+          return NextResponse.json(
+            { 
+              error: error.message || 'Error analyzing GitHub repository. Please check if the repository is public and accessible.',
+              code: 'GITHUB_ANALYSIS_ERROR'
+            },
+            { status: 400 }
+          )
+        }
+      }
+    }
+
+    // Processar upload de arquivos (ZIP)
     let allFiles: File[] = []
-
-    // Processar upload de arquivos
     if (files && files.length > 0) {
       // Verificar se é ZIP
       const zipFile = files.find(f => f.name.endsWith('.zip'))
       if (zipFile) {
         try {
-          const extractedFiles = await extractZipFiles(zipFile)
-          allFiles = [...files.filter(f => !f.name.endsWith('.zip')), ...extractedFiles]
-          logger.info('ZIP extracted', { fileCount: extractedFiles.length })
-        } catch (error) {
-          logger.error('Error extracting ZIP', { error })
+          logger.info('Analyzing uploaded ZIP file', { fileName: zipFile.name, userId })
+          
+          const analysis = await runAnalysis({
+            type: 'upload',
+            value: zipFile
+          })
+
+          // Salvar prompt no histórico (se usuário existir)
+          let savedPromptId = `temp-${Date.now()}`
+          if (user) {
+            try {
+              const savedPrompt = await prisma.prompt.create({
+                data: {
+                  userId: user.id,
+                  title: `Uploaded Project - ${new Date().toLocaleDateString('en-US')}`,
+                  content: analysis.markdown,
+                  projectType: analysis.analysis.projectType,
+                  stack: analysis.analysis.stack,
+                },
+              })
+              savedPromptId = savedPrompt.id
+              logger.info('Upload analysis completed', { promptId: savedPrompt.id, userId })
+            } catch (saveError: any) {
+              logger.warn('Error saving prompt to database, continuing with temp ID', { error: saveError.message })
+            }
+          }
+
+          // Enviar email de notificação (assíncrono) - apenas se usuário existir
+          if (user) {
+            sendPromptReadyEmail(user.email, `Uploaded Project - ${new Date().toLocaleDateString('en-US')}`, savedPromptId).catch(
+              (error) => logger.error('Error sending email', { error })
+            )
+
+            // Deduzir crédito se não for assinatura mensal e não for o primeiro prompt gratuito
+            try {
+              if (user.subscription !== 'monthly') {
+                const isFirstPrompt = user.credits === 0 && user.subscription === 'free'
+                if (isFirstPrompt) {
+                  logger.info('First free prompt used', { userId: user.id })
+                } else {
+                  await prisma.user.update({
+                    where: { id: user.id },
+                    data: {
+                      credits: {
+                        decrement: 1,
+                      },
+                    },
+                  })
+                }
+              }
+            } catch (creditError: any) {
+              logger.warn('Error updating credits', { error: creditError.message })
+            }
+          }
+
+          return NextResponse.json({
+            prompt: analysis.markdown,
+            promptId: savedPromptId,
+            analysis: {
+              stack: analysis.analysis.stack,
+              framework: analysis.analysis.framework,
+              projectType: analysis.analysis.projectType
+            },
+            canonical: analysis.canonical
+          })
+        } catch (error: any) {
+          logger.error('Error analyzing upload', { error: error.message, userId })
           return NextResponse.json(
-            { error: 'Erro ao extrair arquivo ZIP' },
+            { 
+              error: error.message || 'Error analyzing uploaded files. Please check if the ZIP file is valid.',
+              code: 'UPLOAD_ANALYSIS_ERROR'
+            },
             { status: 400 }
           )
         }
       } else {
+        // Fallback para sistema antigo se não for ZIP
         allFiles = Array.from(files)
       }
-    }
-
-    // GitHub será implementado em breve
-    if (githubUrl) {
-      return NextResponse.json(
-        { 
-          error: 'Integração com GitHub será lançada em breve. Por enquanto, faça upload de arquivos ou ZIP.',
-          code: 'GITHUB_NOT_AVAILABLE'
-        },
-        { status: 501 }
-      )
     }
 
     if (allFiles.length === 0) {
@@ -134,7 +298,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    logger.info('Analyzing files', { fileCount: allFiles.length, userId: payload.userId })
+    logger.info('Analyzing files', { fileCount: allFiles.length, userId })
 
     // Analisar arquivos
     const analysis = await analyzeFiles(allFiles)
@@ -172,66 +336,77 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    logger.info('Generating prompt', { userId: payload.userId })
+    logger.info('Generating prompt', { userId })
 
     // Gerar superprompt
     const prompt = await generateSuperPrompt(analysis, fileContents)
 
-    // Salvar prompt no histórico
-    const savedPrompt = await prisma.prompt.create({
-      data: {
-        userId: user.id,
-        title: `Projeto ${new Date().toLocaleDateString('pt-BR')}`,
-        content: prompt,
-        projectType: analysis.stack.join(', ') || 'Desconhecido',
-        stack: analysis.stack.join(', '),
-      },
-    })
-
-    logger.info('Prompt generated', { promptId: savedPrompt.id, userId: payload.userId })
-
-    // Enviar email de notificação (assíncrono, não bloqueia resposta)
-    sendPromptReadyEmail(user.email, savedPrompt.title || 'Novo Prompt', savedPrompt.id).catch(
-      (error) => logger.error('Erro ao enviar email', { error })
-    )
-
-    // Deduzir crédito se não for assinatura mensal e não for o primeiro prompt gratuito
-    if (user.subscription !== 'monthly') {
-      if (isFirstPrompt) {
-        // Primeiro prompt é gratuito, não deduzir crédito
-        logger.info('First free prompt used', { userId: user.id })
-      } else {
-        await prisma.user.update({
-          where: { id: user.id },
+    // Salvar prompt no histórico (se usuário existir)
+    let savedPromptId = `temp-${Date.now()}`
+    if (user) {
+      try {
+        const savedPrompt = await prisma.prompt.create({
           data: {
-            credits: {
-              decrement: 1,
-            },
+            userId: user.id,
+            title: `Project ${new Date().toLocaleDateString('en-US')}`,
+            content: prompt,
+            projectType: analysis.stack.join(', ') || 'Unknown',
+            stack: analysis.stack.join(', '),
           },
         })
+        savedPromptId = savedPrompt.id
+        logger.info('Prompt generated', { promptId: savedPrompt.id, userId })
+
+        // Enviar email de notificação (assíncrono, não bloqueia resposta)
+        sendPromptReadyEmail(user.email, `Project ${new Date().toLocaleDateString('en-US')}`, savedPrompt.id).catch(
+          (error) => logger.error('Error sending email', { error })
+        )
+
+        // Deduzir crédito se não for assinatura mensal e não for o primeiro prompt gratuito
+        try {
+          if (user.subscription !== 'monthly') {
+            const isFirstPrompt = user.credits === 0 && user.subscription === 'free'
+            if (isFirstPrompt) {
+              logger.info('First free prompt used', { userId: user.id })
+            } else {
+              await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                  credits: {
+                    decrement: 1,
+                  },
+                },
+              })
+            }
+          }
+        } catch (creditError: any) {
+          logger.warn('Error updating credits', { error: creditError.message })
+        }
+      } catch (saveError: any) {
+        logger.warn('Error saving prompt to database, continuing with temp ID', { error: saveError.message })
       }
     }
 
     return NextResponse.json({
       prompt,
-      promptId: savedPrompt.id,
+      promptId: savedPromptId,
       analysis,
     })
   } catch (error: any) {
     logger.error('Error generating prompt', { error: error.message, stack: error.stack })
     
     // Mensagens de erro mais específicas
-    let errorMessage = 'Erro ao processar projeto'
+    let errorMessage = 'Error processing project. Please try again.'
     let errorCode = 'UNKNOWN_ERROR'
     
     if (error.message?.includes('ZIP')) {
-      errorMessage = 'Erro ao extrair arquivo ZIP. Verifique se o arquivo não está corrompido.'
+      errorMessage = 'Error extracting ZIP file. Please check if the file is not corrupted.'
       errorCode = 'ZIP_EXTRACTION_ERROR'
     } else if (error.message?.includes('size') || error.message?.includes('tamanho')) {
-      errorMessage = 'Arquivo muito grande. Tente enviar arquivos menores ou divida o projeto.'
+      errorMessage = 'File is too large. Please try uploading smaller files or split the project.'
       errorCode = 'FILE_TOO_LARGE'
     } else if (error.message?.includes('parse') || error.message?.includes('JSON')) {
-      errorMessage = 'Erro ao analisar arquivos. Verifique se os arquivos estão em formato válido.'
+      errorMessage = 'Error analyzing files. Please check if the files are in a valid format.'
       errorCode = 'PARSE_ERROR'
     } else if (error.message) {
       errorMessage = error.message
@@ -241,7 +416,7 @@ export async function POST(request: NextRequest) {
       { 
         error: errorMessage,
         code: errorCode,
-        suggestion: 'Tente novamente com arquivos menores ou entre em contato com o suporte se o problema persistir.'
+        suggestion: 'Please try again with smaller files or contact support if the problem persists.'
       },
       { status: 500 }
     )

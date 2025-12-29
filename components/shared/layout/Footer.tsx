@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 
 export default function Footer() {
   return (
@@ -22,14 +23,26 @@ export default function Footer() {
               <span className="text-lg md:text-xl font-bold text-white">Codervex</span>
             </div>
             <p className="text-gray-400 mb-4 max-w-md">
-              Codervex transforms web projects into AI-ready instructions.
+              Codervex extracts structured technical context from real codebases.
             </p>
+            <Link
+              href="/why-codervex"
+              className="inline-flex items-center gap-2 text-primary-400 hover:text-primary-300 font-medium text-sm transition-colors group"
+            >
+              <span>→ Why Codervex exists</span>
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
+            </Link>
           </div>
 
           {/* Product */}
           <div>
             <h3 className="text-white font-semibold mb-4">Product</h3>
             <ul className="space-y-2">
+              <li>
+                <Link href="/why-codervex" className="text-gray-400 hover:text-primary-400 transition-colors">
+                  Why Codervex
+                </Link>
+              </li>
               <li className="text-gray-400">Demo</li>
               <li className="text-gray-400">Pricing</li>
             </ul>

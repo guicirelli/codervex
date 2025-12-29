@@ -26,10 +26,10 @@ export default function ForgotPasswordPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao processar solicitação')
+        throw new Error(data.error || 'Error processing request. Please try again.')
       }
 
-      toast.success('Se o email existir, você receberá instruções para redefinir sua senha')
+      toast.success('If the email exists, you will receive instructions to reset your password')
       setSent(true)
     } catch (error: any) {
       toast.error(error.message)

@@ -11,17 +11,30 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  password      String
-  credits       Int       @default(0)
-  subscription  String?   @default("free") // free, monthly, pay-per-use
-  stripeId      String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  prompts       Prompt[]
-  payments      Payment[]
+  id           String    @id @default(cuid())
+  email        String    @unique
+  username     String?   @unique // Identidade pública (estilo Instagram)
+  displayName  String?   // Nome de exibição
+  avatar       String?   // URL do avatar
+  name         String?   // Nome completo (legado)
+  dataNascimento DateTime? // Data de nascimento
+  localizacao  String?   // Localização
+  password     String?   // Opcional - pode ser criado via OAuth
+  credits      Int       @default(0)
+  subscription String?   @default("free") // free, monthly, pay-per-use
+  stripeId     String?
+  clerkId      String?   @unique // ID do Clerk para sincronização
+  // Estado da identidade
+  identityStatus String  @default("pending") // pending, active, suspended
+  lastUsernameChange DateTime? // Para limitar mudanças de username
+  // Providers vinculados
+  hasGoogle    Boolean   @default(false)
+  hasGithub    Boolean   @default(false)
+  hasPassword  Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  prompts      Prompt[]
+  payments     Payment[]
 }
 
 model Prompt {
@@ -41,14 +54,13 @@ model Prompt {
 }
 
 model Payment {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  stripeId      String   @unique
-  amount        Int
-  currency      String   @default("usd")
-  status        String   // succeeded, pending, failed
-  type          String   // one-time, subscription
-  createdAt     DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeId  String   @unique
+  amount    Int
+  currency  String   @default("usd")
+  status    String // succeeded, pending, failed
+  type      String // one-time, subscription
+  createdAt DateTime @default(now())
 }
-
