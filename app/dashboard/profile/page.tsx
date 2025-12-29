@@ -448,21 +448,6 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-
-            {/* Aviso de segurança */}
-            {!canRemove && (
-              <div className="mt-6 p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold text-yellow-400 mb-1">Account Protection</h4>
-                    <p className="text-sm text-yellow-300">
-                      You need to have at least one active login method. Add another method before removing this one.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
