@@ -27,6 +27,8 @@ export default function DashboardPage() {
   const [analysisResult, setAnalysisResult] = useState<{ markdown: string; promptId: string; source: string; type: 'repository' | 'file'; fileCount?: number } | null>(null)
   const [history, setHistory] = useState<Array<{ id: string; title: string; createdAt: string; projectType?: string; stack?: string }>>([])
   const [loadingHistory, setLoadingHistory] = useState(false)
+  const [historyStorageAvailable, setHistoryStorageAvailable] = useState(true)
+  const [historyWarning, setHistoryWarning] = useState<string>('')
 
 
   // Carregar histórico de análises
@@ -39,9 +41,17 @@ export default function DashboardPage() {
       if (response.ok) {
         const data = await response.json()
         setHistory(data.prompts || [])
+        setHistoryStorageAvailable(data.storageAvailable !== false)
+        setHistoryWarning(typeof data.warning === 'string' ? data.warning : '')
+      } else {
+        // Do not show as a crash; just mark history as temporarily unavailable.
+        setHistoryStorageAvailable(false)
+        setHistoryWarning('Prompt history is temporarily unavailable.')
       }
     } catch (error) {
       console.error('Error loading history:', error)
+      setHistoryStorageAvailable(false)
+      setHistoryWarning('Prompt history is temporarily unavailable.')
     } finally {
       setLoadingHistory(false)
     }
@@ -527,6 +537,15 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
                   <span className="ml-2 text-gray-600 dark:text-gray-400">Loading history...</span>
+                </div>
+              ) : !historyStorageAvailable ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 dark:text-gray-400">
+                    {historyWarning || 'Prompt history is disabled.'}
+                  </p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                    To enable it, set <span className="font-mono">DATABASE_URL</span> and run Prisma migrations.
+                  </p>
                 </div>
               ) : history.length === 0 ? (
                 <div className="text-center py-8">

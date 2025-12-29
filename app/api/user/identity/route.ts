@@ -40,6 +40,45 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // If DB is not configured (common in local dev), return a safe Clerk-only identity
+    // instead of crashing with Prisma initialization errors.
+    if (!process.env.DATABASE_URL) {
+      try {
+        const { clerkClient } = await import('@clerk/nextjs/server')
+        const clerkClientInstance = await clerkClient()
+        const clerkUser = await clerkClientInstance.users.getUser(userId)
+        const email = clerkUser.emailAddresses?.[0]?.emailAddress || null
+        const displayName =
+          clerkUser.firstName || clerkUser.lastName
+            ? `${clerkUser.firstName || ''}${clerkUser.lastName ? ` ${clerkUser.lastName}` : ''}`.trim()
+            : null
+
+        return NextResponse.json({
+          identity: {
+            username: null,
+            displayName,
+            avatar: clerkUser.imageUrl || null,
+            email,
+            dataNascimento: null,
+            localizacao: null,
+            status: 'pending',
+            hasGoogle: clerkUser.externalAccounts?.some(acc => acc.provider === 'oauth_google') || false,
+            hasGithub: clerkUser.externalAccounts?.some(acc => acc.provider === 'oauth_github') || false,
+            hasPassword: !!clerkUser.passwordEnabled,
+          },
+          canChangeUsername: false,
+          nextUsernameChangeDate: null,
+          storageAvailable: false,
+          warning: 'User profile storage is disabled because DATABASE_URL is not configured.',
+        })
+      } catch (e: any) {
+        return NextResponse.json(
+          { error: 'Profile is temporarily unavailable. Please try again.' },
+          { status: 503 }
+        )
+      }
+    }
+
     // Buscar usuário no banco (por clerkId ou id)
     const user = await prisma.user.findFirst({
       where: {

@@ -6,6 +6,9 @@ import { getTokenFromRequest, verifyToken } from '@/lib/core/auth'
 export const dynamic = 'force-dynamic'
 
 async function ensureDbUserFromClerk(clerkUserId: string) {
+  // If DB is not configured, history cannot be stored.
+  if (!process.env.DATABASE_URL) return null
+
   const { clerkClient } = await import('@clerk/nextjs/server')
   const clerkClientInstance = await clerkClient()
   const clerkUser = await clerkClientInstance.users.getUser(clerkUserId)
@@ -66,6 +69,16 @@ async function ensureDbUserFromClerk(clerkUserId: string) {
 
 export async function GET(request: NextRequest) {
   try {
+    // If the DB isn't configured (common in local dev), do not throw 500.
+    // Return an empty history with an explicit flag so the UI can show a friendly message.
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json({
+        prompts: [],
+        storageAvailable: false,
+        warning: 'Prompt history is disabled because DATABASE_URL is not configured.',
+      })
+    }
+
     // Tentar obter do Clerk primeiro
     let userId: string | null = null
     
