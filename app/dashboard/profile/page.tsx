@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/shared/layout/Navbar'
 import Footer from '@/components/shared/layout/Footer'
-import { User, Save, Mail, CheckCircle2, AlertCircle, Plus, X, Github } from 'lucide-react'
+import { User, Save, Mail, CheckCircle2, AlertCircle, Plus, X, Github, Image as ImageIcon, Trash2, Edit } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
 import { useSignIn, useUser } from '@clerk/nextjs'
@@ -42,6 +42,8 @@ export default function ProfilePage() {
     displayName: '',
     avatar: '',
   })
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!userLoaded) {
@@ -73,10 +75,17 @@ export default function ProfilePage() {
       if (response.ok) {
         const data = await response.json()
         setIdentity(data.identity)
+        
+        // Preencher displayName com o valor atual ou username ou email sem domínio
+        const currentDisplayName = data.identity.displayName || 
+          (data.identity.username ? data.identity.username.replace('@', '') : null) ||
+          (data.identity.email ? data.identity.email.split('@')[0] : '')
+        
         setFormData({
-          displayName: data.identity.displayName || '',
+          displayName: currentDisplayName || '',
           avatar: data.identity.avatar || '',
         })
+        setAvatarPreview(data.identity.avatar || null)
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
         if (response.status === 401) {
@@ -84,12 +93,20 @@ export default function ProfilePage() {
         } else {
           // Se não conseguir carregar, criar identidade básica do Clerk
           if (clerkUser) {
+            const fallbackDisplayName = clerkUser.firstName || 
+              (clerkUser.emailAddresses[0]?.emailAddress ? clerkUser.emailAddresses[0].emailAddress.split('@')[0] : '')
+            
             setIdentity({
               displayName: clerkUser.firstName || null,
               avatar: clerkUser.imageUrl || null,
               email: clerkUser.emailAddresses[0]?.emailAddress || '',
               status: 'active',
             })
+            setFormData({
+              displayName: fallbackDisplayName || '',
+              avatar: clerkUser.imageUrl || '',
+            })
+            setAvatarPreview(clerkUser.imageUrl || null)
             toast.error(errorData.error || 'Error loading profile. Using basic information.')
           } else {
             router.push('/auth/login')
@@ -100,12 +117,20 @@ export default function ProfilePage() {
       console.error('Error loading identity:', error)
       // Se houver erro de rede, usar dados básicos do Clerk
       if (clerkUser) {
+        const fallbackDisplayName = clerkUser.firstName || 
+          (clerkUser.emailAddresses[0]?.emailAddress ? clerkUser.emailAddresses[0].emailAddress.split('@')[0] : '')
+        
         setIdentity({
           displayName: clerkUser.firstName || null,
           avatar: clerkUser.imageUrl || null,
           email: clerkUser.emailAddresses[0]?.emailAddress || '',
           status: 'active',
         })
+        setFormData({
+          displayName: fallbackDisplayName || '',
+          avatar: clerkUser.imageUrl || '',
+        })
+        setAvatarPreview(clerkUser.imageUrl || null)
         toast.error('Network error. Using basic information.')
       } else {
         router.push('/auth/login')
@@ -180,6 +205,57 @@ export default function ProfilePage() {
     }
   }
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validar tipo de arquivo
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
+      return
+    }
+
+    // Validar tamanho (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB')
+      return
+    }
+
+    // Ler arquivo e converter para base64
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const base64String = reader.result as string
+      setFormData(prev => ({ ...prev, avatar: base64String }))
+      setAvatarPreview(base64String)
+    }
+    reader.onerror = () => {
+      toast.error('Error reading image file')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleImageFromGallery = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.setAttribute('capture', 'environment')
+      fileInputRef.current.click()
+    }
+  }
+
+  const handleImageEdit = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.removeAttribute('capture')
+      fileInputRef.current.click()
+    }
+  }
+
+  const handleImageDelete = () => {
+    setFormData(prev => ({ ...prev, avatar: '' }))
+    setAvatarPreview(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
   const handleUnlinkProvider = async (provider: 'google' | 'github' | 'password') => {
     if (!canRemove) {
       toast.error('You need to have at least one active login method')
@@ -250,29 +326,57 @@ export default function ProfilePage() {
                   Profile Picture
                 </label>
                 <div className="flex items-center gap-4">
-                  {formData.avatar ? (
-                    <Image
-                      src={formData.avatar}
-                      alt="Avatar"
-                      width={80}
-                      height={80}
-                      className="rounded-full border-2 border-primary-500/50 object-cover"
-                    />
-                  ) : (
-                    <div className="w-20 h-20 rounded-full bg-primary-500 flex items-center justify-center border-2 border-primary-400">
-                      <User className="w-10 h-10 text-white" />
+                  <div className="relative group">
+                    {avatarPreview || formData.avatar ? (
+                      <Image
+                        src={avatarPreview || formData.avatar}
+                        alt="Avatar"
+                        width={100}
+                        height={100}
+                        className="rounded-full border-2 border-primary-500/50 object-cover"
+                      />
+                    ) : (
+                      <div className="w-[100px] h-[100px] rounded-full bg-primary-500 flex items-center justify-center border-2 border-primary-400">
+                        <User className="w-12 h-12 text-white" />
+                      </div>
+                    )}
+                    {/* Botões de ação na imagem */}
+                    <div className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleImageFromGallery}
+                        className="p-2 bg-primary-500 hover:bg-primary-600 rounded-full transition-colors"
+                        title="Take photo"
+                      >
+                        <ImageIcon className="w-4 h-4 text-white" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleImageEdit}
+                        className="p-2 bg-blue-500 hover:bg-blue-600 rounded-full transition-colors"
+                        title="Upload from computer"
+                      >
+                        <Edit className="w-4 h-4 text-white" />
+                      </button>
+                      {(avatarPreview || formData.avatar) && (
+                        <button
+                          type="button"
+                          onClick={handleImageDelete}
+                          className="p-2 bg-red-500 hover:bg-red-600 rounded-full transition-colors"
+                          title="Remove image"
+                        >
+                          <Trash2 className="w-4 h-4 text-white" />
+                        </button>
+                      )}
                     </div>
-                  )}
-                  <div className="flex-1">
-                    <input
-                      type="url"
-                      value={formData.avatar}
-                      onChange={(e) => setFormData(prev => ({ ...prev, avatar: e.target.value }))}
-                      placeholder="https://example.com/avatar.jpg"
-                      className="w-full px-4 py-2 border-2 border-gray-700 bg-gray-800 text-white rounded-lg focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Optional: Image URL</p>
                   </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
                 </div>
               </div>
 
