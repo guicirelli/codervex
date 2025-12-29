@@ -64,26 +64,70 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Buscar usuário no banco (por clerkId ou id)
-    let user
+    // Ensure user exists in DB (required for history)
+    let user = null as any
     try {
       user = await prisma.user.findFirst({
-        where: {
-          OR: [
-            { clerkId: userId },
-            { id: userId },
-          ],
-        },
+        where: { OR: [{ clerkId: userId }, { id: userId }] },
       })
+
+      if (!user) {
+        const { clerkClient } = await import('@clerk/nextjs/server')
+        const clerkClientInstance = await clerkClient()
+        const clerkUser = await clerkClientInstance.users.getUser(userId)
+        const email = clerkUser.emailAddresses?.[0]?.emailAddress?.toLowerCase().trim()
+
+        if (email) {
+          const hasGoogle = clerkUser.externalAccounts?.some(acc => acc.provider === 'oauth_google') || false
+          const hasGithub = clerkUser.externalAccounts?.some(acc => acc.provider === 'oauth_github') || false
+          const hasPassword = !!clerkUser.passwordEnabled
+
+          const existing = await prisma.user.findFirst({
+            where: { OR: [{ clerkId: userId }, { email }] },
+          })
+
+          if (existing) {
+            user = await prisma.user.update({
+              where: { id: existing.id },
+              data: {
+                clerkId: userId,
+                email,
+                hasGoogle,
+                hasGithub,
+                hasPassword,
+                identityStatus: 'active',
+                displayName:
+                  clerkUser.firstName || clerkUser.lastName
+                    ? `${clerkUser.firstName || ''}${clerkUser.lastName ? ` ${clerkUser.lastName}` : ''}`.trim()
+                    : undefined,
+                avatar: clerkUser.imageUrl || undefined,
+              },
+            })
+          } else {
+            user = await prisma.user.create({
+              data: {
+                email,
+                clerkId: userId,
+                hasGoogle,
+                hasGithub,
+                hasPassword,
+                credits: 0,
+                subscription: 'free',
+                identityStatus: 'active',
+                displayName:
+                  clerkUser.firstName || clerkUser.lastName
+                    ? `${clerkUser.firstName || ''}${clerkUser.lastName ? ` ${clerkUser.lastName}` : ''}`.trim()
+                    : null,
+                avatar: clerkUser.imageUrl || null,
+              },
+            })
+          }
+        }
+      }
     } catch (dbError: any) {
-      // Se houver erro de banco (ex: DATABASE_URL não configurado), continuar sem salvar
+      // If DB is unavailable, still allow prompt generation (but no history)
       logger.warn('Database error, continuing without saving to history', { error: dbError.message })
       user = null
-    }
-
-    // Se não encontrar usuário, ainda permitir análise mas não salvar no histórico
-    if (!user) {
-      logger.warn('User not found in database, continuing without saving to history', { userId })
     }
 
     // Verificar créditos (permitir 1 prompt gratuito para novos usuários) - apenas se usuário existir

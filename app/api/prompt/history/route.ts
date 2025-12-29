@@ -5,6 +5,65 @@ import { getTokenFromRequest, verifyToken } from '@/lib/core/auth'
 
 export const dynamic = 'force-dynamic'
 
+async function ensureDbUserFromClerk(clerkUserId: string) {
+  const { clerkClient } = await import('@clerk/nextjs/server')
+  const clerkClientInstance = await clerkClient()
+  const clerkUser = await clerkClientInstance.users.getUser(clerkUserId)
+  const email = clerkUser.emailAddresses?.[0]?.emailAddress?.toLowerCase().trim()
+  if (!email) return null
+
+  const hasGoogle = clerkUser.externalAccounts?.some(acc => acc.provider === 'oauth_google') || false
+  const hasGithub = clerkUser.externalAccounts?.some(acc => acc.provider === 'oauth_github') || false
+  const hasPassword = !!clerkUser.passwordEnabled
+
+  // Find by clerkId OR email, then link/insert deterministically
+  const existing = await prisma.user.findFirst({
+    where: {
+      OR: [{ clerkId: clerkUserId }, { email }],
+    },
+    select: { id: true },
+  })
+
+  if (existing) {
+    return await prisma.user.update({
+      where: { id: existing.id },
+      data: {
+        clerkId: clerkUserId,
+        email,
+        hasGoogle,
+        hasGithub,
+        hasPassword,
+        identityStatus: 'active',
+        displayName:
+          clerkUser.firstName || clerkUser.lastName
+            ? `${clerkUser.firstName || ''}${clerkUser.lastName ? ` ${clerkUser.lastName}` : ''}`.trim()
+            : undefined,
+        avatar: clerkUser.imageUrl || undefined,
+      },
+      select: { id: true },
+    })
+  }
+
+  return await prisma.user.create({
+    data: {
+      email,
+      clerkId: clerkUserId,
+      hasGoogle,
+      hasGithub,
+      hasPassword,
+      credits: 0,
+      subscription: 'free',
+      identityStatus: 'active',
+      displayName:
+        clerkUser.firstName || clerkUser.lastName
+          ? `${clerkUser.firstName || ''}${clerkUser.lastName ? ` ${clerkUser.lastName}` : ''}`.trim()
+          : null,
+      avatar: clerkUser.imageUrl || null,
+    },
+    select: { id: true },
+  })
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Tentar obter do Clerk primeiro
@@ -38,7 +97,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Buscar usuário no banco para obter o ID interno
-    const user = await prisma.user.findFirst({
+    let user = await prisma.user.findFirst({
       where: {
         OR: [
           { clerkId: userId },
@@ -51,10 +110,18 @@ export async function GET(request: NextRequest) {
     })
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found. Please try signing in again.' },
-        { status: 404 }
-      )
+      // If authenticated via Clerk but missing from DB, create/link automatically
+      try {
+        user = await ensureDbUserFromClerk(userId)
+      } catch (e) {
+        // fall through
+      }
+      if (!user) {
+        return NextResponse.json(
+          { error: 'User not found. Please try signing in again.' },
+          { status: 404 }
+        )
+      }
     }
 
     // Buscar histórico de prompts

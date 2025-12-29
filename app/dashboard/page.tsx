@@ -35,7 +35,7 @@ export default function DashboardPage() {
     
     setLoadingHistory(true)
     try {
-      const response = await fetch('/api/prompt/history')
+      const response = await fetch('/api/prompt/history', { cache: 'no-store' })
       if (response.ok) {
         const data = await response.json()
         setHistory(data.prompts || [])
