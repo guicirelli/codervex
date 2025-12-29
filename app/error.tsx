@@ -21,20 +21,20 @@ export default function Error({
         <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <AlertCircle className="w-8 h-8 text-red-600" />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Ops! Algo deu errado</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Something went wrong</h1>
         <p className="text-gray-600 mb-8">
-          Ocorreu um erro inesperado. Por favor, tente novamente.
+          An unexpected error occurred. Please try again.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
             onClick={reset}
             className="btn-primary"
           >
-            Tentar Novamente
+            Try Again
           </button>
           <Link href="/" className="btn-secondary inline-flex items-center justify-center">
             <Home className="w-4 h-4 mr-2" />
-            Voltar ao Início
+            Back to Home
           </Link>
         </div>
       </div>

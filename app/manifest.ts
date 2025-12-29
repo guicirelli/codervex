@@ -2,9 +2,9 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Codervex - Transforme projetos web em superprompts de IA',
+    name: 'Codervex - Deep Software Understanding for Developers',
     short_name: 'Codervex',
-    description: 'Transforme qualquer projeto web em um superprompt de IA e recrie sites instantaneamente',
+    description: 'Turn real codebases into structured, reliable context and prompts.',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',

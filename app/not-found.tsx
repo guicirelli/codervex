@@ -11,18 +11,18 @@ export default function NotFound() {
       <div className="flex-1 flex items-center justify-center px-4">
         <div className="text-center">
           <h1 className="text-6xl font-bold text-primary-600 mb-4">404</h1>
-          <h2 className="text-3xl font-semibold text-gray-900 mb-4">Página não encontrada</h2>
+          <h2 className="text-3xl font-semibold text-gray-900 mb-4">Page not found</h2>
           <p className="text-gray-600 mb-8 max-w-md mx-auto">
-            A página que você está procurando não existe ou foi movida.
+            The page you are looking for does not exist or has been moved.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/" className="btn-primary inline-flex items-center justify-center">
               <Home className="w-4 h-4 mr-2" />
-              Voltar ao Início
+              Back to Home
             </Link>
             <Link href="/dashboard" className="btn-secondary inline-flex items-center justify-center">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Ir para Dashboard
+              Go to Dashboard
             </Link>
           </div>
         </div>
