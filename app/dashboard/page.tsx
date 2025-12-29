@@ -25,10 +25,45 @@ export default function DashboardPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [linkError, setLinkError] = useState<string>('')
   const [analysisResult, setAnalysisResult] = useState<{ markdown: string; promptId: string; source: string; type: 'repository' | 'file'; fileCount?: number } | null>(null)
-  const [history, setHistory] = useState<Array<{ id: string; title: string; createdAt: string; projectType?: string; stack?: string }>>([])
+  const [history, setHistory] = useState<Array<{ id: string; title: string; createdAt: string; projectType?: string; stack?: string; content?: string }>>([])
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [historyStorageAvailable, setHistoryStorageAvailable] = useState(true)
   const [historyWarning, setHistoryWarning] = useState<string>('')
+
+  const LOCAL_HISTORY_KEY = 'codervex_prompt_history_v1'
+
+  const loadLocalHistory = useCallback(() => {
+    try {
+      const raw = localStorage.getItem(LOCAL_HISTORY_KEY)
+      if (!raw) return []
+      const parsed = JSON.parse(raw)
+      if (!Array.isArray(parsed)) return []
+      return parsed
+        .filter((p: any) => p && typeof p.id === 'string' && typeof p.createdAt === 'string')
+        .slice(0, 100)
+    } catch {
+      return []
+    }
+  }, [])
+
+  const saveLocalHistory = useCallback((items: any[]) => {
+    try {
+      localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(items.slice(0, 100)))
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  const upsertLocalHistoryItem = useCallback(
+    (item: { id: string; title: string; createdAt: string; projectType?: string; stack?: string; content?: string }) => {
+      const existing = loadLocalHistory()
+      const without = existing.filter((p: any) => p?.id !== item.id)
+      const merged = [item, ...without]
+      saveLocalHistory(merged)
+      return merged
+    },
+    [loadLocalHistory, saveLocalHistory]
+  )
 
 
   // Carregar histórico de análises
@@ -40,22 +75,33 @@ export default function DashboardPage() {
       const response = await fetch('/api/prompt/history', { cache: 'no-store' })
       if (response.ok) {
         const data = await response.json()
-        setHistory(data.prompts || [])
-        setHistoryStorageAvailable(data.storageAvailable !== false)
-        setHistoryWarning(typeof data.warning === 'string' ? data.warning : '')
+        const storageOk = data.storageAvailable !== false
+        if (storageOk) {
+          setHistory(data.prompts || [])
+          setHistoryStorageAvailable(true)
+          setHistoryWarning('')
+        } else {
+          const local = loadLocalHistory()
+          setHistory(local)
+          setHistoryStorageAvailable(true) // local history still works
+          setHistoryWarning('Using local history (DATABASE_URL not configured).')
+        }
       } else {
-        // Do not show as a crash; just mark history as temporarily unavailable.
-        setHistoryStorageAvailable(false)
-        setHistoryWarning('Prompt history is temporarily unavailable.')
+        const local = loadLocalHistory()
+        setHistory(local)
+        setHistoryStorageAvailable(true)
+        setHistoryWarning(local.length > 0 ? 'Using local history.' : 'Prompt history is temporarily unavailable.')
       }
     } catch (error) {
       console.error('Error loading history:', error)
-      setHistoryStorageAvailable(false)
-      setHistoryWarning('Prompt history is temporarily unavailable.')
+      const local = loadLocalHistory()
+      setHistory(local)
+      setHistoryStorageAvailable(true)
+      setHistoryWarning(local.length > 0 ? 'Using local history.' : 'Prompt history is temporarily unavailable.')
     } finally {
       setLoadingHistory(false)
     }
-  }, [user])
+  }, [user, loadLocalHistory])
 
   // Carregar histórico quando usuário estiver logado
   useEffect(() => {
@@ -210,13 +256,34 @@ export default function DashboardPage() {
       }
       
       // Atualizar estado com o resultado
+      const finalPromptId = data.promptId || `temp-${Date.now()}`
+
       setAnalysisResult({
         markdown: data.prompt,
-        promptId: data.promptId || `temp-${Date.now()}`,
+        promptId: finalPromptId,
         source: source || 'Project',
         type,
         fileCount: type === 'file' ? files.length : undefined
       })
+
+      // Save to local history immediately (works even without DATABASE_URL)
+      const localTitle =
+        type === 'repository'
+          ? `GitHub Project - ${source || 'Repository'}`
+          : `Uploaded Project - ${source || 'Files'}`
+
+      const mergedLocal = upsertLocalHistoryItem({
+        id: finalPromptId,
+        title: localTitle,
+        createdAt: new Date().toISOString(),
+        projectType: data.analysis?.projectType,
+        stack: data.analysis?.stack,
+        content: data.prompt,
+      })
+      setHistory(mergedLocal)
+      if (!historyWarning) {
+        setHistoryWarning('Using local history (DATABASE_URL not configured).')
+      }
       
       // Limpar formulário
       setLink('')
@@ -532,20 +599,17 @@ export default function DashboardPage() {
                 <Clock className="w-5 h-5 text-primary-500" />
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Latest Analyses</h2>
               </div>
+
+              {historyWarning ? (
+                <div className="mb-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                  {historyWarning}
+                </div>
+              ) : null}
               
               {loadingHistory ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
                   <span className="ml-2 text-gray-600 dark:text-gray-400">Loading history...</span>
-                </div>
-              ) : !historyStorageAvailable ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500 dark:text-gray-400">
-                    {historyWarning || 'Prompt history is disabled.'}
-                  </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                    To enable it, set <span className="font-mono">DATABASE_URL</span> and run Prisma migrations.
-                  </p>
                 </div>
               ) : history.length === 0 ? (
                 <div className="text-center py-8">

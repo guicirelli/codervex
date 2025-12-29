@@ -60,10 +60,56 @@ export default function ResultPage() {
         const data = await response.json()
         setResult(data)
       } else {
+        // Fallback: if DB isn't configured, use local history storage
+        try {
+          const raw = localStorage.getItem('codervex_prompt_history_v1')
+          const parsed = raw ? JSON.parse(raw) : []
+          const local = Array.isArray(parsed) ? parsed.find((p: any) => p?.id === params.id) : null
+          if (local?.content) {
+            setResult({
+              id: local.id,
+              prompt: local.content,
+              createdAt: local.createdAt || new Date().toISOString(),
+              summary: {
+                technologies: typeof local.stack === 'string' ? local.stack.split(',').map((s: string) => s.trim()) : [],
+                structure: local.projectType || 'Unknown',
+                features: [],
+              },
+            })
+            setLoading(false)
+            return
+          }
+        } catch {
+          // ignore
+        }
+
         toast.error('Project not found')
         router.push('/dashboard')
       }
     } catch (error) {
+      // Fallback: local history
+      try {
+        const raw = localStorage.getItem('codervex_prompt_history_v1')
+        const parsed = raw ? JSON.parse(raw) : []
+        const local = Array.isArray(parsed) ? parsed.find((p: any) => p?.id === params.id) : null
+        if (local?.content) {
+          setResult({
+            id: local.id,
+            prompt: local.content,
+            createdAt: local.createdAt || new Date().toISOString(),
+            summary: {
+              technologies: typeof local.stack === 'string' ? local.stack.split(',').map((s: string) => s.trim()) : [],
+              structure: local.projectType || 'Unknown',
+              features: [],
+            },
+          })
+          setLoading(false)
+          return
+        }
+      } catch {
+        // ignore
+      }
+
       toast.error('Error loading result')
       router.push('/dashboard')
     } finally {
