@@ -130,7 +130,7 @@ export default function LoginPage() {
         if (clerkError.code === 'form_identifier_not_found') {
           // Usuário não encontrado - mostrar aviso amigável
           isUserNotFound = true
-          errorMessage = 'No account found with this email. Please sign up first to create your account.'
+          errorMessage = 'No account found with this email address. Please sign up first to create your account.'
         } else if (clerkError.code === 'form_password_incorrect') {
           errorMessage = 'Invalid email or password. Please check your credentials and try again.'
         } else if (clerkError.message) {
@@ -213,7 +213,7 @@ export default function LoginPage() {
             // Mostrar aviso amigável ao invés de erro
             toast(errorMsg, {
               icon: 'ℹ️',
-              duration: 5000,
+              duration: 6000,
               style: {
                 background: '#1e40af',
                 color: '#fff',
@@ -221,7 +221,16 @@ export default function LoginPage() {
             })
             return // Não continuar com toast.error
           } else if (clerkError.includes('already exists') || clerkError.includes('already registered')) {
-            errorMsg = `This ${provider === 'oauth_google' ? 'Google' : 'GitHub'} account is already registered. Please sign in.`
+            errorMsg = `This ${provider === 'oauth_google' ? 'Google' : 'GitHub'} account is already registered. Please sign in instead.`
+            toast(errorMsg, {
+              icon: 'ℹ️',
+              duration: 5000,
+              style: {
+                background: '#1e40af',
+                color: '#fff',
+              },
+            })
+            return
           } else {
             errorMsg = err.errors[0].message
           }
@@ -301,7 +310,7 @@ export default function LoginPage() {
                 {oauthLoading === 'oauth_google' ? (
                   <>
                     <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                    <span>Conectando...</span>
+                    <span>Connecting...</span>
                   </>
                 ) : (
                   <>
@@ -336,7 +345,7 @@ export default function LoginPage() {
                 {oauthLoading === 'oauth_github' ? (
                   <>
                     <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                    <span>Conectando...</span>
+                    <span>Connecting...</span>
                   </>
                 ) : (
                   <>
@@ -401,7 +410,7 @@ export default function LoginPage() {
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                  Senha
+                  Password
                 </label>
                 <div className="relative">
                   <input

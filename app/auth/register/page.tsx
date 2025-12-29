@@ -167,8 +167,19 @@ export default function RegisterPage() {
         
         // Erros específicos do Clerk
         if (clerkError.code === 'form_identifier_exists') {
-          errorMessage = 'An account with this email already exists'
+          // Email já cadastrado - mostrar aviso amigável
+          errorMessage = 'An account with this email address already exists. Please sign in instead or use a different email.'
           setErrors({ email: errorMessage })
+          // Mostrar aviso amigável
+          toast(errorMessage, {
+            icon: 'ℹ️',
+            duration: 6000,
+            style: {
+              background: '#1e40af',
+              color: '#fff',
+            },
+          })
+          return // Não mostrar toast.error
         } else if (clerkError.code === 'form_password_pwned') {
           errorMessage = 'This password has been compromised in data breaches. Please choose another.'
           setErrors({ password: errorMessage })
@@ -229,6 +240,16 @@ export default function RegisterPage() {
           const clerkError = err.errors[0].message.toLowerCase()
           if (clerkError.includes('already exists') || clerkError.includes('already registered')) {
             errorMsg = `This ${provider === 'oauth_google' ? 'Google' : 'GitHub'} account is already registered. Please sign in instead.`
+            // Mostrar aviso amigável
+            toast(errorMsg, {
+              icon: 'ℹ️',
+              duration: 6000,
+              style: {
+                background: '#1e40af',
+                color: '#fff',
+              },
+            })
+            return // Não mostrar toast.error
           } else {
             errorMsg = err.errors[0].message
           }
@@ -404,7 +425,7 @@ export default function RegisterPage() {
               {/* Senha */}
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                  Senha
+                  Password
                 </label>
                 <div className="relative">
                   <input
@@ -528,7 +549,7 @@ export default function RegisterPage() {
                 {oauthLoading === 'oauth_google' ? (
                   <>
                     <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                    <span>Conectando...</span>
+                    <span>Connecting...</span>
                   </>
                 ) : (
                   <>
@@ -563,7 +584,7 @@ export default function RegisterPage() {
                 {oauthLoading === 'oauth_github' ? (
                   <>
                     <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                    <span>Conectando...</span>
+                    <span>Connecting...</span>
                   </>
                 ) : (
                   <>
